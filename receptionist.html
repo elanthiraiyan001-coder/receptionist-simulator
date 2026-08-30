@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receptionist Desk Portal - Velora OPD Engine</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --card-bg: rgba(17, 24, 39, 0.75);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --accent-amber: #f59e0b;
+            --accent-rose: #f43f5e;
+            --accent-purple: #a855f7;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background-image: 
+                radial-gradient(circle at 10% 10%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 90%, rgba(168, 85, 247, 0.08) 0%, transparent 40%);
+            padding: 24px;
+        }
+
+        /* Top Reception Header */
+        .reception-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            padding: 16px 28px;
+            border-radius: var(--radius-xl);
+            margin-bottom: 24px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .desk-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .desk-info h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .desk-info p {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* Live Doctor Cabin Sync Widget */
+        .doctor-sync-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--card-border);
+            padding: 8px 18px;
+            border-radius: 14px;
+        }
+
+        .doc-sync-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            color: #000;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .doc-sync-status {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .doc-sync-status .name { font-size: 13px; font-weight: 700; }
+        .doc-sync-status .state { font-size: 12px; color: var(--accent-emerald); font-weight: 800; }
+
+        /* Speed Control Bar */
+        .sim-controls-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            padding: 6px 12px;
+            border-radius: 14px;
+        }
+
+        .btn-sim-ctrl {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-sim-ctrl:hover { background: rgba(255, 255, 255, 0.15); }
+        .btn-sim-ctrl.active {
+            background: var(--accent-blue);
+            color: #fff;
+            border-color: var(--accent-blue);
+        }
+
+        /* Main Reception Grid */
+        .reception-grid {
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            flex: 1;
+        }
+
+        /* Walk-in Registration Form Panel */
+        .registration-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .form-input, .form-select {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--card-border);
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-select option {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-register-master {
+            background: linear-gradient(135deg, var(--accent-blue), #2563eb);
+            color: #fff;
+            border: none;
+            padding: 16px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            margin-top: 4px;
+        }
+
+        .btn-register-master:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+        }
+
+        /* Quick Reception Trigger Actions */
+        .trigger-actions-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .btn-trigger-action {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-trigger-action:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-trigger-emergency {
+            background: rgba(244, 63, 94, 0.15);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            color: #fca5a5;
+        }
+        .btn-trigger-emergency:hover {
+            background: rgba(244, 63, 94, 0.25);
+        }
+
+        /* Master Queue Management Table Panel */
+        .queue-management-panel {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-xl);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* ACTIVE CABIN HERO CARD AT TOP OF RECEPTION DESK */
+        .active-cabin-hero {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.12), rgba(16, 185, 129, 0.08));
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.15);
+        }
+
+        .hero-patient-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .hero-token-badge {
+            background: linear-gradient(135deg, var(--accent-cyan), #3b82f6);
+            color: #000;
+            font-weight: 900;
+            font-size: 22px;
+            padding: 8px 18px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .hero-patient-info h4 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 800;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .hero-patient-info p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .hero-timer-box {
+            text-align: right;
+            background: rgba(0, 0, 0, 0.35);
+            border: 1px solid var(--card-border);
+            padding: 10px 20px;
+            border-radius: 14px;
+        }
+
+        .hero-timer-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            letter-spacing: 1px;
+        }
+
+        .hero-timer-lbl {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .queue-table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        .queue-table-header h3 {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .queue-list-container {
+            flex: 1;
+            max-height: 520px;
+            overflow-y: auto;
+        }
+
+        .rec-queue-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .rec-queue-table th {
+            text-align: left;
+            padding: 12px;
+            color: var(--text-muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--card-border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background: #0f172a;
+            z-index: 10;
+        }
+
+        .rec-queue-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .rec-queue-table tr {
+            transition: all 0.2s;
+        }
+
+        .rec-queue-table tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        /* DISTINCT ROW STYLING FOR DEMOTED / STRIKE PATIENTS */
+        .tr-emergency {
+            background: rgba(244, 63, 94, 0.12) !important;
+            border-left: 4px solid var(--accent-rose) !important;
+        }
+
+        .tr-vip {
+            background: rgba(245, 158, 11, 0.12) !important;
+            border-left: 4px solid var(--accent-amber) !important;
+        }
+
+        .tr-strike-1 {
+            background: rgba(245, 158, 11, 0.1) !important;
+            border-left: 4px solid var(--accent-amber) !important;
+        }
+
+        .tr-strike-2 {
+            background: rgba(244, 63, 94, 0.12) !important;
+            border-left: 4px solid var(--accent-rose) !important;
+        }
+
+        .tr-cancelled {
+            background: rgba(100, 116, 139, 0.15) !important;
+            opacity: 0.5;
+        }
+
+        /* STRIKE BADGES & TINY CUMULATIVE DOTS */
+        .strike-dot-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .strike-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .strike-dot-yellow {
+            background: #f59e0b;
+            box-shadow: 0 0 6px rgba(245, 158, 11, 0.8);
+        }
+
+        .strike-dot-red {
+            background: #f43f5e;
+            box-shadow: 0 0 6px rgba(244, 63, 94, 0.8);
+        }
+
+        .strike-dot-black {
+            background: #64748b;
+            box-shadow: 0 0 4px rgba(100, 116, 139, 0.5);
+        }
+
+        .badge-strike-1 {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-left: 6px;
+        }
+
+        .badge-strike-2 {
+            background: rgba(244, 63, 94, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 8px;
+            margin-left: 6px;
+        }
+
+        .badge-late-warning {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--accent-amber);
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 6px;
+            animation: pulse-late 1.5s infinite;
+        }
+
+        @keyframes pulse-late {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* HIGH-VISIBILITY TYPE BADGES */
+        .badge-type-emergency {
+            background: linear-gradient(135deg, #f43f5e, #be123c);
+            color: #fff;
+            font-weight: 900;
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 12px rgba(244, 63, 94, 0.5);
+            letter-spacing: 0.3px;
+        }
+
+        .badge-type-vip {
+            background: linear-gradient(135deg, #f59e0b, #b45309);
+            color: #000;
+            font-weight: 900;
+            font-size: 11px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.5);
+            letter-spacing: 0.3px;
+        }
+
+        .badge-type-walkin {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .badge-type-app {
+            background: rgba(6, 182, 212, 0.15);
+            color: #67e8f9;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 12px;
+        }
+
+        .token-cell {
+            font-weight: 800;
+            color: var(--accent-cyan);
+        }
+
+        .patient-cell {
+            font-weight: 700;
+        }
+
+        /* CLEAN UNIFIED GATE STATUS TAGS */
+        .tag-gate-lobby {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            padding: 5px 14px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tag-gate-hold {
+            background: rgba(168, 85, 247, 0.2);
+            color: #e9d5ff;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-gate-lab {
+            background: rgba(6, 182, 212, 0.2);
+            color: #67e8f9;
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            padding: 5px 12px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* PRIMARY ADMIT BUTTON */
+        .btn-admit-primary {
+            background: linear-gradient(135deg, var(--accent-emerald), #059669);
+            color: #000;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 3px 10px rgba(16, 185, 129, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-admit-primary:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.1);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-admit-primary.emergency {
+            background: linear-gradient(135deg, var(--accent-rose), #dc2626);
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(244, 63, 94, 0.4);
+        }
+
+        /* THREE DOTS BUTTON & CONTAINER CELL */
+        .more-options-cell {
+            position: relative;
+            text-align: right;
+        }
+
+        .btn-three-dots {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: var(--text-primary);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .btn-three-dots:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* THREE DOTS DROPDOWN MENU PANEL */
+        .dots-dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 40px;
+            background: #0f172a;
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 50;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            min-width: 175px;
+        }
+
+        .dots-dropdown-menu.hidden { display: none; }
+
+        .dots-menu-item {
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: left;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .dots-menu-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .dots-menu-item.danger {
+            color: #fca5a5;
+        }
+        .dots-menu-item.danger:hover {
+            background: rgba(244, 63, 94, 0.2);
+        }
+
+        .btn-action-small {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-action-small.restroom-return { background: linear-gradient(135deg, var(--accent-purple), #7c3aed); color: #fff; border: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Reception Top Header -->
+    <header class="reception-header">
+        <div class="header-left">
+            <div class="desk-icon">📋</div>
+            <div class="desk-info">
+                <h2>Reception Desk Portal</h2>
+                <p>Velora OPD Gate Check-In & Queue Management</p>
+            </div>
+        </div>
+
+        <!-- Live Connected Doctor Cabin Telemetry -->
+        <div class="doctor-sync-card">
+            <div class="doc-sync-avatar">DS</div>
+            <div class="doc-sync-status">
+                <span class="name">Dr. Sarah Sharma (Cabin 1)</span>
+                <span class="state" id="rec-doc-state">🔴 DOCTOR NOT CLOCKED IN</span>
+            </div>
+        </div>
+
+        <!-- Speed Simulation Controls -->
+        <div class="sim-controls-group">
+            <button class="btn-sim-ctrl" id="btn-rec-play-pause">⏸️ Pause</button>
+            <button class="btn-sim-ctrl active" id="btn-rec-sp-1x">1x</button>
+            <button class="btn-sim-ctrl" id="btn-rec-sp-5x">5x</button>
+            <button class="btn-sim-ctrl" id="btn-rec-sp-15x">15x</button>
+            <button class="btn-sim-ctrl" id="btn-rec-reset">🔄 Reset 20 Patients</button>
+        </div>
+
+        <div style="font-weight: 800; font-size: 15px; color: var(--accent-cyan);" id="rec-clock">08:40 AM</div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="reception-grid">
+
+        <!-- Unified Patient Registration Panel with Dropdown -->
+        <section class="registration-panel">
+            <h3 class="panel-title">➕ Patient Registration Desk</h3>
+
+            <div class="form-group">
+                <label>Patient Full Name</label>
+                <input type="text" class="form-input" id="rec-walkin-name" placeholder="e.g. Kani">
+            </div>
+
+            <div class="form-group">
+                <label>Mobile Number (For WhatsApp QR)</label>
+                <input type="tel" class="form-input" id="rec-walkin-phone" placeholder="9876543210">
+            </div>
+
+            <div class="form-group">
+                <label>Patient Admission Type</label>
+                <select class="form-select" id="rec-patient-type">
+                    <option value="WALKIN">📋 Walk-In (Regular Queue)</option>
+                    <option value="EMERGENCY">🚨 Medical Emergency (Instant Pos #1 Priority)</option>
+                    <option value="VIP">👑 VIP Reference (Special Priority)</option>
+                </select>
+            </div>
+
+            <button class="btn-register-master" id="btn-register-patient">
+                <span>🖨️</span> REGISTER PATIENT & PRINT SLIP
+            </button>
+
+            <h3 class="panel-title" style="margin-top: 10px;">⚡ Quick Triggers</h3>
+
+            <div class="trigger-actions-box">
+                <button class="btn-trigger-action btn-trigger-emergency" id="btn-rec-quick-emergency">
+                    <span>🚨</span> Quick Emergency Arrival (Pos #1)
+                </button>
+
+                <button class="btn-trigger-action" id="btn-rec-lab-return">
+                    <span>🔬</span> Diagnostic Lab Return (Pos #2)
+                </button>
+            </div>
+        </section>
+
+        <!-- Master Queue Management Table Panel -->
+        <section class="queue-management-panel">
+
+            <!-- ACTIVE CONSULTATION HERO CARD AT TOP OF RECEPTION DESK -->
+            <div class="active-cabin-hero" id="rec-hero-cabin">
+                <div class="hero-patient-left" id="rec-hero-patient-left">
+                    <span class="hero-token-badge" style="background:rgba(255,255,255,0.1); color:var(--text-muted);">🚪</span>
+                    <div class="hero-patient-info">
+                        <h4 style="color:var(--text-muted);">Doctor Cabin 1 Available</h4>
+                        <p>Waiting for Doctor to clock in and call next patient from lobby...</p>
+                    </div>
+                </div>
+
+                <div class="hero-timer-box">
+                    <div class="hero-timer-val" id="rec-hero-timer">00:00</div>
+                    <div class="hero-timer-lbl" id="rec-hero-timer-lbl">Consultation Duration</div>
+                </div>
+            </div>
+
+            <div class="queue-table-header">
+                <h3>👥 Master Hospital Queue (20 App Booked Patients • Starts 08:40 AM)</h3>
+                <span style="font-size:12px; color:var(--text-muted);" id="rec-total-count">20 Patients Registered</span>
+            </div>
+
+            <div class="queue-list-container">
+                <table class="rec-queue-table">
+                    <thead>
+                        <tr>
+                            <th>Pos</th>
+                            <th>Token</th>
+                            <th>Patient Name</th>
+                            <th>Category</th>
+                            <th>Reporting Time</th>
+                            <th>Estimated Turn</th>
+                            <th>Gate Status</th>
+                            <th style="text-align:right;">More Options</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rec-queue-tbody">
+                        <!-- Dynamically Rendered 20 Queue Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- UNIFIED WALL-CLOCK SHARED ENGINE PRE-LOADED WITH 20 APP BOOKED PATIENTS -->
+    <script>
+        (function() {
+            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V7';
+
+            function getInitialDefaultState() {
+                let s = 31200; // EXACT START TIME: 08:40:00 AM (31200s)
+                let actSec = 10 * 60; // 10 mins baseline
+
+                let sampleNames = [
+                    'Rajesh Kumar', 'Ananya Roy', 'Suresh Patel', 'Kavita Singh', 'Deepak Verma',
+                    'Vikram Malhotra', 'Sneha Reddy', 'Amit Sharma', 'Pooja Gupta', 'Rohan Iyer',
+                    'Neha Joshi', 'Sanjay Kumar', 'Ritu Agarwal', 'Manish Choudhary', 'Swati Nair',
+                    'Tarun Saxena', 'Divya Pillai', 'Varun Kapoor', 'Meera Bose', 'Elan (Test Patient)'
+                ];
+
+                let pList = [];
+                for (let i = 0; i < 20; i++) {
+                    let eta = (9.0 * 3600) + (i * actSec); // ETAs start 09:00 AM, 09:10 AM, ...
+                    let rep = eta - (20 * 60); // 20m lead window -> 08:40 AM, 08:50 AM, ...
+                    pList.push({
+                        token: `P-${i+1}`,
+                        name: sampleNames[i],
+                        type: 'APP',
+                        reportingSec: rep,
+                        etaSec: eta,
+                        status: 'EN_ROUTE',
+                        strike: 0,
+                        prio: 'REGULAR'
+                    });
+                }
+
+                return {
+                    simBaseTime: s,
+                    realBaseTimestamp: Date.now(),
+                    isRunning: true,
+                    speedMultiplier: 1,
+                    doctorState: {
+                        isClockedIn: false,
+                        cabinStatus: 'NOT_CLOCKED_IN',
+                        activePatient: null,
+                        consultStartSimSec: 0,
+                        rollingACT: 10.0,
+                        completedCount: 0,
+                        pendingBreakMins: 0,
+                        breakRemainingSec: 0,
+                        breakStartSimSec: 0,
+                        delayMins: 0,
+                        pendingVIPAlert: null
+                    },
+                    patients: pList,
+                    walkinCounter: 1,
+                    emergencyCounter: 1,
+                    vipCounter: 1,
+                    lastUpdated: Date.now()
+                };
+            }
+
+            let state = loadState();
+            let openMenuToken = null;
+
+            function loadState() {
+                try {
+                    let raw = localStorage.getItem(STORAGE_KEY);
+                    if (raw) {
+                        let parsed = JSON.parse(raw);
+                        if (parsed.patients && parsed.patients.length >= 15) {
+                            return parsed;
+                        }
+                    }
+                } catch(e) {}
+                let def = getInitialDefaultState();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(def));
+                return def;
+            }
+
+            function saveState() {
+                state.lastUpdated = Date.now();
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                renderTable();
+            }
+
+            function getLiveSimSeconds() {
+                if (!state.isRunning) return state.simBaseTime;
+                let elapsedRealSec = (Date.now() - state.realBaseTimestamp) / 1000;
+                return state.simBaseTime + (elapsedRealSec * (state.speedMultiplier || 1));
+            }
+
+            const dom = {
+                clock: document.getElementById('rec-clock'),
+                docState: document.getElementById('rec-doc-state'),
+                totalCount: document.getElementById('rec-total-count'),
+                tbody: document.getElementById('rec-queue-tbody'),
+                
+                heroCabin: document.getElementById('rec-hero-cabin'),
+                heroPatientLeft: document.getElementById('rec-hero-patient-left'),
+                heroTimer: document.getElementById('rec-hero-timer'),
+                heroTimerLbl: document.getElementById('rec-hero-timer-lbl'),
+
+                inputName: document.getElementById('rec-walkin-name'),
+                inputPhone: document.getElementById('rec-walkin-phone'),
+                selectType: document.getElementById('rec-patient-type'),
+                btnRegister: document.getElementById('btn-register-patient'),
+                btnQuickEmergency: document.getElementById('btn-rec-quick-emergency'),
+
+                btnLabReturn: document.getElementById('btn-rec-lab-return'),
+
+                btnPlayPause: document.getElementById('btn-rec-play-pause'),
+                btnSp1x: document.getElementById('btn-rec-sp-1x'),
+                btnSp5x: document.getElementById('btn-rec-sp-5x'),
+                btnSp15x: document.getElementById('btn-rec-sp-15x'),
+                btnReset: document.getElementById('btn-rec-reset')
+            };
+
+            function formatHM(sec) {
+                let h = Math.floor(sec / 3600) % 12 || 12;
+                let m = Math.floor((sec % 3600) / 60);
+                let ampm = sec >= 43200 ? 'PM' : 'AM';
+                return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
+            }
+
+            // SMART MULTI-PATIENT DEMOTION CALCULATOR (SKIPPING ALREADY DEMOTED PATIENTS!)
+            function findTargetIndexAfterDemotion(currentIdx, slotsToDemote) {
+                let validCounted = 0;
+                let targetIdx = currentIdx;
+
+                for (let j = currentIdx + 1; j < state.patients.length; j++) {
+                    let nextP = state.patients[j];
+                    // Skip patients who ALREADY have a strike (strike > 0)
+                    if (nextP.strike === 0 && nextP.status === 'EN_ROUTE') {
+                        validCounted++;
+                    }
+                    targetIdx = j;
+                    if (validCounted === slotsToDemote) {
+                        break;
+                    }
+                }
+                return targetIdx;
+            }
+
+            // AUTOMATED CASCADING RE-REPORTING DEMOTION EVALUATOR
+            function evaluateAutomatedDemotions(currentSimSec) {
+                let ds = state.doctorState;
+                let rollingACTSec = (ds.rollingACT || 10.0) * 60;
+                let uncappedLeadBufferSec = 2.0 * rollingACTSec;
+                // ENFORCE 5-MINUTE MINIMUM LEAD BUFFER CAP (5m MIN, 30m MAX)
+                let leadBufferSec = Math.max(5 * 60, Math.min(uncappedLeadBufferSec, 30 * 60));
+
+                let stateChanged = false;
+
+                for (let i = 0; i < state.patients.length; i++) {
+                    let p = state.patients[i];
+                    if (p.status !== 'EN_ROUTE') continue; // Only demote patients still away / en-route
+
+                    let deadlineSec = p.reportingSec || (9.0 * 3600 - leadBufferSec);
+                    let graceEndSec = deadlineSec + (5 * 60); // 5-minute grace window past reporting deadline
+
+                    // STRIKE 1 TRIGGER: Missed Reporting Deadline + 5m Grace
+                    if (p.strike === 0 && currentSimSec >= graceEndSec) {
+                        p.strike = 1;
+                        stateChanged = true;
+
+                        // Demote +2 slots down AMONG VALID NON-DEMOTED PATIENTS
+                        let targetIdx = findTargetIndexAfterDemotion(i, 2);
+                        state.patients.splice(i, 1);
+                        state.patients.splice(targetIdx, 0, p);
+
+                        // RE-CALCULATE REPORTING TIME FOR NEW DEMOTED POSITION!
+                        // Ensure new Estimated Turn is at least 5m into future from current clock
+                        let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
+                        p.reportingSec = newEtaSec - leadBufferSec;
+                        
+                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
+                        break;
+                    }
+                    // STRIKE 2 TRIGGER: Missed NEW Position Reporting Deadline + 5m Grace
+                    else if (p.strike === 1 && currentSimSec >= graceEndSec) {
+                        p.strike = 2;
+                        stateChanged = true;
+
+                        // Demote +5 slots down AMONG VALID NON-DEMOTED PATIENTS
+                        let targetIdx = findTargetIndexAfterDemotion(i, 5);
+                        state.patients.splice(i, 1);
+                        state.patients.splice(targetIdx, 0, p);
+
+                        // RE-CALCULATE REPORTING TIME AGAIN FOR NEW DEMOTED POSITION!
+                        let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
+                        p.reportingSec = newEtaSec - leadBufferSec;
+
+                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
+                        break;
+                    }
+                    // STRIKE 3 TRIGGER: Missed Final Position Reporting Deadline -> Move to Last Slot / Cancel
+                    else if (p.strike === 2 && currentSimSec >= graceEndSec) {
+                        p.strike = 3;
+                        p.status = 'CANCELLED';
+                        stateChanged = true;
+
+                        // Move to very last slot
+                        state.patients.splice(i, 1);
+                        state.patients.push(p);
+
+                        console.log(`❌ STRIKE 3: Token ${p.token} evicted to LAST SLOT of the day.`);
+                        break;
+                    }
+                }
+
+                if (stateChanged) {
+                    saveState();
+                }
+            }
+
+            // DYNAMIC QUEUE CALCULATION ENGINE WITH 20 PRE-LOADED APP BOOKED PATIENTS
+            function renderTable() {
+                let currentSimSec = getLiveSimSeconds();
+
+                // Run automated demotion checks!
+                evaluateAutomatedDemotions(currentSimSec);
+
+                dom.clock.textContent = formatHM(currentSimSec);
+                dom.totalCount.textContent = `${state.patients.length} Patients Registered`;
+
+                // Speed Controls UI
+                [dom.btnSp1x, dom.btnSp5x, dom.btnSp15x].forEach(b => b.classList.remove('active'));
+                if (state.speedMultiplier === 1) dom.btnSp1x.classList.add('active');
+                if (state.speedMultiplier === 5) dom.btnSp5x.classList.add('active');
+                if (state.speedMultiplier === 15) dom.btnSp15x.classList.add('active');
+                dom.btnPlayPause.textContent = state.isRunning ? '⏸️ Pause' : '▶️ Resume';
+
+                // Doctor Telemetry Header & Hero Cabin Card Sync
+                let ds = state.doctorState;
+
+                if (!ds.isClockedIn) {
+                    dom.docState.innerHTML = `<span style="color:var(--accent-rose);">🔴 DOCTOR NOT CLOCKED IN YET (Shift 09:00 - 12:00)</span>`;
+                    dom.heroPatientLeft.innerHTML = `
+                        <span class="hero-token-badge" style="background:rgba(255,255,255,0.1); color:var(--text-muted);">🚪</span>
+                        <div class="hero-patient-info">
+                            <h4 style="color:var(--accent-cyan);">Doctor Away (Shift: 09:00 AM - 12:00 PM)</h4>
+                            <p>Doctor Dr. Sarah Sharma has not clocked in yet.</p>
+                        </div>
+                    `;
+                    dom.heroTimer.textContent = '00:00';
+                    dom.heroTimerLbl.textContent = 'Consultation Timer';
+                } 
+                else if (ds.cabinStatus === 'BREAK') {
+                    let breakElapsedSec = currentSimSec - (ds.breakStartSimSec || currentSimSec);
+                    let breakRemSec = Math.max(0, (ds.breakTotalSec || 900) - breakElapsedSec);
+                    let bMins = Math.floor(breakRemSec / 60);
+                    let bSecs = Math.floor(breakRemSec % 60);
+                    dom.docState.innerHTML = `<span style="color:var(--accent-amber);">☕ ON BREAK (${bMins}m ${bSecs}s remaining)</span>`;
+
+                    dom.heroPatientLeft.innerHTML = `
+                        <span class="hero-token-badge" style="background:var(--accent-amber); color:#000;">☕</span>
+                        <div class="hero-patient-info">
+                            <h4 style="color:var(--accent-amber);">Doctor on Coffee Break</h4>
+                            <p>Queue consultations temporarily paused. Resumes in ${bMins}m ${bSecs}s.</p>
+                        </div>
+                    `;
+                    dom.heroTimer.textContent = `${String(bMins).padStart(2, '0')}:${String(bSecs).padStart(2, '0')}`;
+                    dom.heroTimerLbl.textContent = 'Break Countdown';
+                } 
+                else if (ds.cabinStatus === 'IN_CABIN' && ds.activePatient) {
+                    let consultElapsedSec = Math.max(0, currentSimSec - (ds.consultStartSimSec || currentSimSec));
+                    let mins = Math.floor(consultElapsedSec / 60);
+                    let secs = Math.floor(consultElapsedSec % 60);
+                    let timerStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                    let entryTimeStr = formatHM(ds.consultStartSimSec || currentSimSec);
+
+                    dom.docState.innerHTML = `<span style="color:var(--accent-emerald);">🟢 CONSULTING: ${ds.activePatient.token} (${ds.activePatient.name})</span>`;
+
+                    let typeBadge = '';
+                    if (ds.activePatient.type === 'EMERGENCY') typeBadge = `<span class="badge-type-emergency">🚨 EMERGENCY</span>`;
+                    else if (ds.activePatient.type === 'VIP') typeBadge = `<span class="badge-type-vip">👑 VIP REF</span>`;
+                    else if (ds.activePatient.type === 'WALKIN') typeBadge = `<span class="badge-type-walkin">📋 Walk-In</span>`;
+                    else typeBadge = `<span class="badge-type-app">📱 App</span>`;
+
+                    dom.heroPatientLeft.innerHTML = `
+                        <span class="hero-token-badge">${ds.activePatient.token}</span>
+                        <div class="hero-patient-info">
+                            <h4>${ds.activePatient.name} ${typeBadge}</h4>
+                            <p>Currently inside Doctor Cabin 1 • <strong style="color:var(--accent-emerald);">Entered Cabin at ${entryTimeStr}</strong></p>
+                        </div>
+                    `;
+                    dom.heroTimer.textContent = timerStr;
+                    dom.heroTimerLbl.textContent = 'Consultation Elapsed';
+                } 
+                else {
+                    dom.docState.innerHTML = `<span style="color:var(--accent-emerald);">🟢 DOCTOR IN CABIN (IDLE)</span>`;
+                    dom.heroPatientLeft.innerHTML = `
+                        <span class="hero-token-badge" style="background:rgba(255,255,255,0.1); color:var(--text-muted);">🚪</span>
+                        <div class="hero-patient-info">
+                            <h4 style="color:var(--accent-emerald);">Doctor Cabin 1 Available (Idle)</h4>
+                            <p>Ready for next patient. Doctor will call next verified lobby arrival.</p>
+                        </div>
+                    `;
+                    dom.heroTimer.textContent = '00:00';
+                    dom.heroTimerLbl.textContent = 'Consultation Duration';
+                }
+
+                dom.tbody.innerHTML = '';
+
+                // CLINIC PARAMETERS
+                let doctorShiftStartSec = 9.0 * 3600; // 09:00:00 AM
+                let breakSec = (ds.pendingBreakMins || 0) * 60 + (ds.cabinStatus === 'BREAK' ? (ds.breakRemainingSec || 0) : 0);
+                let delaySec = (ds.delayMins || 0) * 60;
+                
+                let activeSec = 0;
+                if (ds.cabinStatus === 'IN_CABIN' && ds.activePatient) {
+                    let consultElapsedSec = Math.max(0, currentSimSec - (ds.consultStartSimSec || currentSimSec));
+                    let isSpecialActive = (ds.activePatient.type === 'EMERGENCY' || ds.activePatient.type === 'VIP' || ds.activePatient.prio === 'EMERGENCY' || ds.activePatient.prio === 'VIP');
+                    let activeTotalSec = isSpecialActive ? (1.5 * (ds.rollingACT || 10.0) * 60) : ((ds.rollingACT || 10.0) * 60);
+                    activeSec = Math.max(0, activeTotalSec - consultElapsedSec);
+                }
+                
+                let rollingACTSec = (ds.rollingACT || 10.0) * 60;
+
+                // 30-MINUTE MAXIMUM LEAD CAP (WITH 5-MINUTE MINIMUM CHECK-IN BUFFER)
+                let uncappedLeadBufferSec = 2.0 * rollingACTSec;
+                let leadBufferSec = Math.max(5 * 60, Math.min(uncappedLeadBufferSec, 30 * 60));
+
+                let cumulativeTimeCursor = Math.max(doctorShiftStartSec, currentSimSec + activeSec + breakSec + delaySec);
+
+                let visibleQueuePos = 1;
+
+                state.patients.forEach((p) => {
+                    if (p.status === 'IN_CABIN') return; // Exclude active patient inside cabin from queue table below
+
+                    let tr = document.createElement('tr');
+                    
+                    if (p.status === 'CANCELLED' || p.strike === 3) {
+                        tr.className = 'tr-cancelled';
+                    } else if (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY') {
+                        tr.className = 'tr-emergency';
+                    } else if (p.prio === 'VIP' || p.type === 'VIP') {
+                        tr.className = 'tr-vip';
+                    } else if (p.strike === 1) {
+                        tr.className = 'tr-strike-1';
+                    } else if (p.strike === 2) {
+                        tr.className = 'tr-strike-2';
+                    }
+
+                    let typeBadgeHtml = '';
+                    if (p.type === 'EMERGENCY' || p.prio === 'EMERGENCY') {
+                        typeBadgeHtml = `<span class="badge-type-emergency">🚨 EMERGENCY</span>`;
+                    } else if (p.type === 'VIP' || p.prio === 'VIP') {
+                        typeBadgeHtml = `<span class="badge-type-vip">👑 VIP REF</span>`;
+                    } else if (p.type === 'WALKIN') {
+                        typeBadgeHtml = `<span class="badge-type-walkin">📋 Walk-In</span>`;
+                    } else {
+                        typeBadgeHtml = `<span class="badge-type-app">📱 App</span>`;
+                    }
+
+                    // Cumulative Tiny Strike Dots HTML (Clean Minimalist Dots Only)
+                    let strikeBadgeHtml = '';
+                    if (p.strike === 1) {
+                        strikeBadgeHtml = `
+                            <span class="strike-dot-container" title="Strike 1: Demoted +2 Slots">
+                                <span class="strike-dot strike-dot-yellow"></span>
+                            </span>
+                        `;
+                    } else if (p.strike === 2) {
+                        strikeBadgeHtml = `
+                            <span class="strike-dot-container" title="Strike 2: Demoted +5 Slots">
+                                <span class="strike-dot strike-dot-yellow"></span>
+                                <span class="strike-dot strike-dot-red"></span>
+                            </span>
+                        `;
+                    } else if (p.strike === 3) {
+                        strikeBadgeHtml = `
+                            <span class="strike-dot-container" title="Strike 3: Evicted / Cancelled">
+                                <span class="strike-dot strike-dot-yellow"></span>
+                                <span class="strike-dot strike-dot-red"></span>
+                                <span class="strike-dot strike-dot-black"></span>
+                            </span>
+                        `;
+                    }
+                    
+                    // COMBINED GATE STATUS COLUMN WITH LATE WARNING
+                    let combinedGateStatusHtml = '';
+                    if (p.status === 'PENDING_VIP_APPROVAL') {
+                        combinedGateStatusHtml = `<span class="tag-gate-hold" style="background:rgba(245,158,11,0.2); color:var(--accent-amber); border-color:rgba(245,158,11,0.4);">⏳ PENDING DOCTOR APPROVAL</span>`;
+                    } else if (p.status === 'EN_ROUTE') {
+                        let isEmerg = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
+                        let lateSec = currentSimSec - (p.reportingSec || 0);
+                        let lateBadge = (lateSec > 0 && p.strike === 0) ? `<span class="badge-late-warning">⚠️ Late ${Math.floor(lateSec/60)}m</span> ` : '';
+
+                        combinedGateStatusHtml = `${lateBadge}<button class="btn-admit-primary ${isEmerg ? 'emergency' : ''}" onclick="admitToLobby('${p.token}')">📍 ADMIT</button>`;
+                    } else if (p.status === 'VERIFIED_IN_LOBBY') {
+                        combinedGateStatusHtml = `<span class="tag-gate-lobby">✓ LOBBY</span>`;
+                    } else if (p.status === 'TEMP_ABSENT') {
+                        combinedGateStatusHtml = `<span class="tag-gate-hold">HOLD <button class="btn-action-small restroom-return" onclick="returnFromRestroom('${p.token}')">🏃 Return</button></span>`;
+                    } else if (p.status === 'IN_DIAGNOSTICS') {
+                        combinedGateStatusHtml = `<span class="tag-gate-lab">LAB <button class="btn-action-small restroom-return" onclick="returnFromRestroom('${p.token}')">🏃 Return</button></span>`;
+                    } else if (p.status === 'CANCELLED') {
+                        combinedGateStatusHtml = `<span style="color:var(--accent-rose); font-weight:800; font-size:11px;">❌ MISSED / CANCELLED</span>`;
+                    } else {
+                        combinedGateStatusHtml = `<span style="color:var(--text-muted); font-size:11px;">Active (${p.status})</span>`;
+                    }
+
+                    // COLUMN 8: MORE OPTIONS (THREE DOTS ⋮ DROPDOWN MENU AT FAR RIGHT END)
+                    let isMenuOpen = (openMenuToken === p.token);
+                    
+                    let menuItemsHtml = '';
+                    if (p.status === 'VERIFIED_IN_LOBBY') {
+                        menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ HOLD</button>`;
+                    }
+                    menuItemsHtml += `
+                        <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
+                        <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
+                        <button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>
+                    `;
+
+                    let moreOptionsHtml = `
+                        <div class="more-options-cell">
+                            <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
+
+                            <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
+                                ${menuItemsHtml}
+                            </div>
+                        </div>
+                    `;
+
+                    // DYNAMIC ESTIMATED TURN COMPUTATION
+                    let liveEtaSec = 0;
+                    let patientDurationSec = (p.type === 'EMERGENCY' || p.type === 'VIP' || p.prio === 'EMERGENCY' || p.prio === 'VIP') ? (1.5 * rollingACTSec) : rollingACTSec;
+
+                    liveEtaSec = cumulativeTimeCursor;
+                    cumulativeTimeCursor += patientDurationSec;
+
+                    // REPORTING TIME (GUARANTEED AT LEAST 5m BEFORE ESTIMATED TURN TIME!)
+                    let calculatedRepSec = p.reportingSec || (liveEtaSec - leadBufferSec);
+                    let displayReportingSec = Math.min(liveEtaSec - (5 * 60), calculatedRepSec);
+                    let displayReportingStr = formatHM(displayReportingSec);
+                    let displayEtaStr = formatHM(liveEtaSec);
+
+                    tr.innerHTML = `
+                        <td>#${visibleQueuePos}</td>
+                        <td class="token-cell">${p.token}</td>
+                        <td class="patient-cell">${p.name} ${strikeBadgeHtml}</td>
+                        <td>${typeBadgeHtml}</td>
+                        <td><strong style="color:${p.strike > 0 ? 'var(--accent-amber)' : 'var(--accent-cyan)'};">${displayReportingStr}</strong></td>
+                        <td><strong style="color:${p.type === 'EMERGENCY' ? 'var(--accent-rose)' : (p.type === 'VIP' ? 'var(--accent-amber)' : 'var(--accent-cyan)')};">${displayEtaStr}</strong></td>
+                        <td>${combinedGateStatusHtml}</td>
+                        <td style="text-align:right;">${moreOptionsHtml}</td>
+                    `;
+                    dom.tbody.appendChild(tr);
+                    visibleQueuePos++;
+                });
+            }
+
+            window.toggleMenu = function(e, token) {
+                e.stopPropagation();
+                openMenuToken = (openMenuToken === token) ? null : token;
+                renderTable();
+            };
+
+            document.addEventListener('click', () => {
+                if (openMenuToken !== null) {
+                    openMenuToken = null;
+                    renderTable();
+                }
+            });
+
+            window.printSlip = function(token) {
+                alert(`🖨️ Printing Gate Slip for Token ${token}...`);
+            };
+
+            window.sendWhatsAppQR = function(token) {
+                alert(`💬 WhatsApp Live Queue Tracker QR sent for Token ${token}!`);
+            };
+
+            window.stepToRestroom = function(token) {
+                state = loadState();
+                let p = state.patients.find(x => x.token === token);
+                if (p) {
+                    p.status = 'TEMP_ABSENT';
+                    saveState();
+                }
+            };
+
+            window.returnFromRestroom = function(token) {
+                state = loadState();
+                let p = state.patients.find(x => x.token === token);
+                if (p) {
+                    p.status = 'VERIFIED_IN_LOBBY';
+                    p.prio = 'RESTROOM_RETURN';
+                    saveState();
+                }
+            };
+
+            window.admitToLobby = function(token) {
+                state = loadState();
+                let p = state.patients.find(x => x.token === token);
+                if (p) {
+                    p.status = 'VERIFIED_IN_LOBBY';
+                    if (p.type === 'VIP') {
+                        state.doctorState.pendingVIPAlert = { token: p.token, name: p.name };
+                    }
+                    saveState();
+                }
+            };
+
+            window.triggerDemotion = function(token) {
+                state = loadState();
+                let p = state.patients.find(x => x.token === token);
+                if (p) {
+                    p.strike = (p.strike || 0) + 1;
+                    saveState();
+                }
+            };
+
+            function calculateNextPatientTime(prioGroup) {
+                let currentSimSec = getLiveSimSeconds();
+                let doctorStartShiftSec = 9.0 * 3600;
+                let rollingACTSec = (state.doctorState.rollingACT || 10.0) * 60;
+                let leadBufferSec = Math.min(2.0 * rollingACTSec, 30 * 60);
+
+                let activeSec = 0;
+                if (state.doctorState.cabinStatus === 'IN_CABIN' && state.doctorState.activePatient) {
+                    let consultElapsedSec = Math.max(0, currentSimSec - (state.doctorState.consultStartSimSec || currentSimSec));
+                    let isSpecialActive = (state.doctorState.activePatient.type === 'EMERGENCY' || state.doctorState.activePatient.type === 'VIP');
+                    let activeTotalSec = isSpecialActive ? (1.5 * rollingACTSec) : rollingACTSec;
+                    activeSec = Math.max(0, activeTotalSec - consultElapsedSec);
+                }
+
+                let breakSec = (state.doctorState.pendingBreakMins || 0) * 60;
+                if (state.doctorState.cabinStatus === 'BREAK') {
+                    breakSec = state.doctorState.breakRemainingSec || 0;
+                }
+
+                let calculatedETASec = 0;
+
+                if (prioGroup === 'EMERGENCY') {
+                    calculatedETASec = Math.max(doctorStartShiftSec, currentSimSec);
+                } else if (prioGroup === 'VIP') {
+                    calculatedETASec = Math.max(doctorStartShiftSec, currentSimSec + activeSec);
+                } else {
+                    let lastPatient = state.patients[state.patients.length - 1];
+                    let lastEtaSec = lastPatient ? lastPatient.etaSec : (8.666 * 3600 + 120 * 60);
+                    calculatedETASec = Math.max(doctorStartShiftSec, Math.max(currentSimSec + activeSec + breakSec, lastEtaSec + rollingACTSec));
+                }
+
+                let calculatedReportingSec = calculatedETASec - leadBufferSec;
+
+                return {
+                    etaSec: calculatedETASec,
+                    reportingSec: calculatedReportingSec
+                };
+            }
+
+            function registerPatientWithType(pType, nameInput) {
+                state = loadState();
+                let name = nameInput ? nameInput.trim() : '';
+                if (!name) {
+                    if (pType === 'WALKIN') name = `Walk-in Patient W-${state.walkinCounter}`;
+                    if (pType === 'EMERGENCY') name = `Emergency Patient E-${state.emergencyCounter}`;
+                    if (pType === 'VIP') name = `VIP Patient V-${state.vipCounter}`;
+                }
+
+                let token = '';
+                if (pType === 'WALKIN') { token = `W-${state.walkinCounter}`; state.walkinCounter++; }
+                if (pType === 'EMERGENCY') { token = `E-${state.emergencyCounter}`; state.emergencyCounter++; }
+                if (pType === 'VIP') { token = `V-${state.vipCounter}`; state.vipCounter++; }
+
+                let times = calculateNextPatientTime(pType);
+
+                let newP = {
+                    token: token,
+                    name: name,
+                    type: pType,
+                    reportingSec: times.reportingSec,
+                    etaSec: times.etaSec,
+                    status: pType === 'VIP' ? 'PENDING_VIP_APPROVAL' : 'EN_ROUTE',
+                    strike: 0,
+                    prio: pType === 'EMERGENCY' ? 'EMERGENCY' : (pType === 'VIP' ? 'VIP' : 'REGULAR')
+                };
+
+                if (pType === 'EMERGENCY') {
+                    state.patients.unshift(newP);
+                } else if (pType === 'VIP') {
+                    let emergCount = state.patients.filter(x => x.prio === 'EMERGENCY').length;
+                    state.patients.splice(emergCount, 0, newP);
+                    state.doctorState.pendingVIPAlert = { token: newP.token, name: newP.name };
+                } else {
+                    state.patients.push(newP);
+                }
+
+                dom.inputName.value = '';
+                dom.inputPhone.value = '';
+                saveState();
+            }
+
+            dom.btnRegister.addEventListener('click', () => {
+                registerPatientWithType(dom.selectType.value, dom.inputName.value);
+            });
+
+            dom.btnQuickEmergency.addEventListener('click', () => {
+                registerPatientWithType('EMERGENCY', `Emergency Case E-${state.emergencyCounter}`);
+            });
+
+            dom.btnLabReturn.addEventListener('click', () => {
+                state = loadState();
+                let labP = state.patients.find(p => p.status === 'IN_DIAGNOSTICS') || state.patients[0];
+                if (labP) {
+                    labP.status = 'VERIFIED_IN_LOBBY';
+                    labP.prio = 'DIAGNOSTIC_RETURN';
+                    saveState();
+                }
+            });
+
+            // Simulation Controls
+            dom.btnPlayPause.addEventListener('click', () => {
+                state = loadState();
+                let currentSimSec = getLiveSimSeconds();
+                state.simBaseTime = currentSimSec;
+                state.realBaseTimestamp = Date.now();
+                state.isRunning = !state.isRunning;
+                saveState();
+            });
+
+            dom.btnSp1x.addEventListener('click', () => setSpeed(1));
+            dom.btnSp5x.addEventListener('click', () => setSpeed(5));
+            dom.btnSp15x.addEventListener('click', () => setSpeed(15));
+
+            function setSpeed(sp) {
+                state.lastUpdated = Date.now();
+                let currentSimSec = getLiveSimSeconds();
+                state.simBaseTime = currentSimSec;
+                state.realBaseTimestamp = Date.now();
+                state.speedMultiplier = sp;
+                saveState();
+            }
+
+            dom.btnReset.addEventListener('click', () => {
+                localStorage.removeItem(STORAGE_KEY);
+                state = getInitialDefaultState();
+                saveState();
+            });
+
+            // Real-Time Render Poller (100ms)
+            setInterval(() => {
+                state = loadState();
+                renderTable();
+            }, 100);
+
+            renderTable();
+        })();
+    </script>
+</body>
+</html>
