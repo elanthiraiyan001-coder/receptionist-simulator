@@ -785,6 +785,14 @@
                 </select>
             </div>
 
+            <div class="form-group">
+                <label>Waiting Preference (Asked by Receptionist)</label>
+                <select class="form-select" id="rec-waiting-pref">
+                    <option value="LOBBY">🛋️ Wait in Hospital Lobby Right Now</option>
+                    <option value="HOLD">🏠 Go Home & Return at Reporting Time (Put on HOLD)</option>
+                </select>
+            </div>
+
             <button class="btn-register-master" id="btn-register-patient">
                 <span>🖨️</span> REGISTER PATIENT & PRINT SLIP
             </button>
@@ -1412,7 +1420,7 @@
                 };
             }
 
-            function registerPatientWithType(pType, nameInput) {
+            function registerPatientWithType(pType, nameInput, waitingPref) {
                 state = loadState();
                 let name = nameInput ? nameInput.trim() : '';
                 if (!name) {
@@ -1428,13 +1436,22 @@
 
                 let times = calculateNextPatientTime(pType);
 
+                let initialStatus = 'EN_ROUTE';
+                if (pType === 'VIP') {
+                    initialStatus = 'PENDING_VIP_APPROVAL';
+                } else if (waitingPref === 'HOLD') {
+                    initialStatus = 'TEMP_ABSENT'; // Put on HOLD (Go Home & Return Later)
+                } else if (waitingPref === 'LOBBY') {
+                    initialStatus = 'VERIFIED_IN_LOBBY'; // Wait in Lobby Right Now
+                }
+
                 let newP = {
                     token: token,
                     name: name,
                     type: pType,
                     reportingSec: times.reportingSec,
                     etaSec: times.etaSec,
-                    status: pType === 'VIP' ? 'PENDING_VIP_APPROVAL' : 'EN_ROUTE',
+                    status: initialStatus,
                     strike: 0,
                     prio: pType === 'EMERGENCY' ? 'EMERGENCY' : (pType === 'VIP' ? 'VIP' : 'REGULAR')
                 };
@@ -1455,7 +1472,9 @@
             }
 
             dom.btnRegister.addEventListener('click', () => {
-                registerPatientWithType(dom.selectType.value, dom.inputName.value);
+                let prefEl = document.getElementById('rec-waiting-pref');
+                let prefVal = prefEl ? prefEl.value : 'LOBBY';
+                registerPatientWithType(dom.selectType.value, dom.inputName.value, prefVal);
             });
 
             dom.btnQuickEmergency.addEventListener('click', () => {
