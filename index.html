@@ -979,15 +979,15 @@
                 return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} ${ampm}`;
             }
 
-            // SMART MULTI-PATIENT DEMOTION CALCULATOR (SKIPPING ALREADY DEMOTED PATIENTS!)
+            // SMART MULTI-PATIENT DEMOTION CALCULATOR (COUNTS ALL NON-STRIKE PATIENTS IRRESPECTIVE OF LOBBY STATUS)
             function findTargetIndexAfterDemotion(currentIdx, slotsToDemote) {
                 let validCounted = 0;
                 let targetIdx = currentIdx;
 
                 for (let j = currentIdx + 1; j < state.patients.length; j++) {
                     let nextP = state.patients[j];
-                    // Skip patients who ALREADY have a strike (strike > 0)
-                    if (nextP.strike === 0 && nextP.status === 'EN_ROUTE') {
+                    // Count ALL patients behind who do NOT have a strike (strike === 0), irrespective of lobby presence
+                    if (nextP.strike === 0) {
                         validCounted++;
                     }
                     targetIdx = j;
