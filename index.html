@@ -1252,8 +1252,11 @@
                     let isMenuOpen = (openMenuToken === p.token);
                     
                     let menuItemsHtml = '';
-                    if (p.status === 'VERIFIED_IN_LOBBY') {
-                        menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ HOLD</button>`;
+                    if (p.status === 'EN_ROUTE' || p.status === 'VERIFIED_IN_LOBBY') {
+                        menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ Put on HOLD (Go Home)</button>`;
+                    }
+                    if (!p.isAppTracked) {
+                        menuItemsHtml += `<button class="dots-menu-item" onclick="convertToAppTracked('${p.token}')">📱 Convert to App Tracked</button>`;
                     }
                     menuItemsHtml += `
                         <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
@@ -1326,6 +1329,16 @@
                 if (p) {
                     p.status = 'TEMP_ABSENT';
                     saveState();
+                }
+            };
+
+            window.convertToAppTracked = function(token) {
+                state = loadState();
+                let p = state.patients.find(x => x.token === token);
+                if (p) {
+                    p.isAppTracked = true;
+                    saveState();
+                    alert(`📱 Token ${p.token} (${p.name}) converted to App Tracked!\nPatient can now view live dynamic ETA tracking on their phone.`);
                 }
             };
 
