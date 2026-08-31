@@ -924,7 +924,7 @@
                     let raw = localStorage.getItem(STORAGE_KEY);
                     if (raw) {
                         let parsed = JSON.parse(raw);
-                        if (parsed && Array.isArray(parsed.patients) && parsed.patients.length > 0) {
+                        if (parsed && Array.isArray(parsed.patients) && parsed.patients.length >= 10) {
                             return parsed;
                         }
                     }
