@@ -785,9 +785,10 @@
                 </select>
             </div>
 
-            <div class="form-group">
-                <label>Waiting Preference (Asked by Receptionist)</label>
+            <div class="form-group" id="group-waiting-pref">
+                <label>Waiting Preference <span style="color:var(--accent-rose); font-weight:800;">*Required for Walk-Ins</span></label>
                 <select class="form-select" id="rec-waiting-pref">
+                    <option value="" disabled selected>❓ Select Waiting Preference (Ask Patient)</option>
                     <option value="LOBBY">🛋️ Wait in Hospital Lobby Right Now</option>
                     <option value="HOLD">🏠 Go Home & Return at Reporting Time (Put on HOLD)</option>
                 </select>
@@ -1466,15 +1467,30 @@
                     state.patients.push(newP);
                 }
 
-                dom.inputName.value = '';
-                dom.inputPhone.value = '';
-                saveState();
-            }
+            dom.selectType.addEventListener('change', () => {
+                let prefGroup = document.getElementById('group-waiting-pref');
+                if (prefGroup) {
+                    if (dom.selectType.value === 'WALKIN') {
+                        prefGroup.style.display = 'block';
+                    } else {
+                        prefGroup.style.display = 'none';
+                    }
+                }
+            });
 
             dom.btnRegister.addEventListener('click', () => {
+                let pType = dom.selectType.value;
                 let prefEl = document.getElementById('rec-waiting-pref');
-                let prefVal = prefEl ? prefEl.value : 'LOBBY';
-                registerPatientWithType(dom.selectType.value, dom.inputName.value, prefVal);
+                let prefVal = prefEl ? prefEl.value : '';
+
+                if (pType === 'WALKIN' && !prefVal) {
+                    alert("⚠️ MANDATORY SELECTION REQUIRED!\n\nPlease ask the Walk-In patient:\n'Would you like to wait in the lobby right now or go home and return at your reporting time?'\n\nThen select a Waiting Preference before registering!");
+                    return;
+                }
+
+                registerPatientWithType(pType, dom.inputName.value, prefVal);
+                
+                if (prefEl) prefEl.selectedIndex = 0; // Reset dropdown for next walk-in
             });
 
             dom.btnQuickEmergency.addEventListener('click', () => {
