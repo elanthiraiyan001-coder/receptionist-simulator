@@ -1467,6 +1467,11 @@
                     state.patients.push(newP);
                 }
 
+                dom.inputName.value = '';
+                dom.inputPhone.value = '';
+                saveState();
+            }
+
             dom.selectType.addEventListener('change', () => {
                 let prefGroup = document.getElementById('group-waiting-pref');
                 if (prefGroup) {
