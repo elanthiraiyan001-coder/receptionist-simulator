@@ -1269,6 +1269,29 @@
                     } else {
                         combinedGateStatusHtml = `<span style="color:var(--text-muted); font-size:11px;">Active (${p.status})</span>`;
                     }
+                    let isMenuOpen = (openMenuToken === p.token);
+                    let menuItemsHtml = '';
+                    if (p.status === 'EN_ROUTE' || p.status === 'VERIFIED_IN_LOBBY') {
+                        menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ Put on HOLD (Go Home)</button>`;
+                    }
+                    if (!p.isAppTracked) {
+                        menuItemsHtml += `<button class="dots-menu-item" onclick="convertToAppTracked('${p.token}')">📱 Convert to App Tracked</button>`;
+                    }
+                    menuItemsHtml += `
+                        <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
+                        <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
+                        <button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>
+                    `;
+
+                    let moreOptionsHtml = `
+                        <div class="more-options-cell">
+                            <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
+
+                            <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
+                                ${menuItemsHtml}
+                            </div>
+                        </div>
+                    `;
 
                     tr.innerHTML = `
                         <td>#${visibleQueuePos}</td>
