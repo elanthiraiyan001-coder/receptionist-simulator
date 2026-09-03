@@ -1235,13 +1235,26 @@
                         `;
                     }
                     
-                    // COMBINED GATE STATUS COLUMN WITH LATE WARNING
+                    // DYNAMIC ESTIMATED TURN COMPUTATION
+                    let liveEtaSec = 0;
+                    let patientDurationSec = (p.type === 'EMERGENCY' || p.type === 'VIP' || p.prio === 'EMERGENCY' || p.prio === 'VIP') ? (1.5 * rollingACTSec) : rollingACTSec;
+
+                    liveEtaSec = cumulativeTimeCursor;
+                    cumulativeTimeCursor += patientDurationSec;
+
+                    // REPORTING TIME (GUARANTEED AT LEAST 5m BEFORE ESTIMATED TURN TIME!)
+                    let calculatedRepSec = p.reportingSec || (liveEtaSec - leadBufferSec);
+                    let displayReportingSec = Math.min(liveEtaSec - (5 * 60), calculatedRepSec);
+                    let displayReportingStr = formatHM(displayReportingSec);
+                    let displayEtaStr = formatHM(liveEtaSec);
+
+                    // COMBINED GATE STATUS COLUMN WITH LATE WARNING (SYNCHRONIZED WITH DISPLAYED REPORTING TIME!)
                     let combinedGateStatusHtml = '';
                     if (p.status === 'PENDING_VIP_APPROVAL') {
                         combinedGateStatusHtml = `<span class="tag-gate-hold" style="background:rgba(245,158,11,0.2); color:var(--accent-amber); border-color:rgba(245,158,11,0.4);">⏳ PENDING DOCTOR APPROVAL</span>`;
                     } else if (p.status === 'EN_ROUTE') {
                         let isEmerg = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
-                        let lateSec = currentSimSec - (p.reportingSec || 0);
+                        let lateSec = currentSimSec - displayReportingSec;
                         let lateBadge = (lateSec > 0 && p.strike === 0) ? `<span class="badge-late-warning">⚠️ Late ${Math.floor(lateSec/60)}m</span> ` : '';
 
                         combinedGateStatusHtml = `${lateBadge}<button class="btn-admit-primary ${isEmerg ? 'emergency' : ''}" onclick="admitToLobby('${p.token}')">📍 ADMIT</button>`;
@@ -1257,45 +1270,6 @@
                         combinedGateStatusHtml = `<span style="color:var(--text-muted); font-size:11px;">Active (${p.status})</span>`;
                     }
 
-                    // COLUMN 8: MORE OPTIONS (THREE DOTS ⋮ DROPDOWN MENU AT FAR RIGHT END)
-                    let isMenuOpen = (openMenuToken === p.token);
-                    
-                    let menuItemsHtml = '';
-                    if (p.status === 'EN_ROUTE' || p.status === 'VERIFIED_IN_LOBBY') {
-                        menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ Put on HOLD (Go Home)</button>`;
-                    }
-                    if (!p.isAppTracked) {
-                        menuItemsHtml += `<button class="dots-menu-item" onclick="convertToAppTracked('${p.token}')">📱 Convert to App Tracked</button>`;
-                    }
-                    menuItemsHtml += `
-                        <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
-                        <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
-                        <button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>
-                    `;
-
-                    let moreOptionsHtml = `
-                        <div class="more-options-cell">
-                            <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
-
-                            <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
-                                ${menuItemsHtml}
-                            </div>
-                        </div>
-                    `;
-
-                    // DYNAMIC ESTIMATED TURN COMPUTATION
-                    let liveEtaSec = 0;
-                    let patientDurationSec = (p.type === 'EMERGENCY' || p.type === 'VIP' || p.prio === 'EMERGENCY' || p.prio === 'VIP') ? (1.5 * rollingACTSec) : rollingACTSec;
-
-                    liveEtaSec = cumulativeTimeCursor;
-                    cumulativeTimeCursor += patientDurationSec;
-
-                    // REPORTING TIME (GUARANTEED AT LEAST 5m BEFORE ESTIMATED TURN TIME!)
-                    let calculatedRepSec = p.reportingSec || (liveEtaSec - leadBufferSec);
-                    let displayReportingSec = Math.min(liveEtaSec - (5 * 60), calculatedRepSec);
-                    let displayReportingStr = formatHM(displayReportingSec);
-                    let displayEtaStr = formatHM(liveEtaSec);
-
                     tr.innerHTML = `
                         <td>#${visibleQueuePos}</td>
                         <td class="token-cell">${p.token}</td>
@@ -1306,6 +1280,8 @@
                         <td>${combinedGateStatusHtml}</td>
                         <td style="text-align:right;">${moreOptionsHtml}</td>
                     `;
+                    dom.tbody.appendChild(tr);
+                    visibleQueuePos++;
                     dom.tbody.appendChild(tr);
                     visibleQueuePos++;
                 });
