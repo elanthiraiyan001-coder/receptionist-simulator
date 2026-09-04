@@ -862,7 +862,7 @@
     <!-- UNIFIED WALL-CLOCK SHARED ENGINE PRE-LOADED WITH 20 APP BOOKED PATIENTS -->
     <script>
         (function() {
-            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V11';
+            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V12';
 
             function getInitialDefaultState() {
                 let s = 31200; // EXACT START TIME: 08:40:00 AM (31200s)
@@ -1034,13 +1034,19 @@
                         state.patients.splice(i, 1);
                         state.patients.splice(targetIdx, 0, p);
 
-                        // RE-CALCULATE REPORTING TIME FOR NEW DEMOTED POSITION (+5m Half-Slot Offset on Collision)!
-                        let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
-                        let baseRepSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
-                        let isColliding1 = state.patients.some((otherP, idx) => idx !== targetIdx && otherP.token !== p.token && otherP.reportingSec === baseRepSec);
-                        p.reportingSec = isColliding1 ? (baseRepSec + (5 * 60)) : baseRepSec;
+                        // CONTEXTUAL REPORTING TIME FOR DEMOTED POSITION (prevP + 5m when inserted between patients)!
+                        let prevP1 = (targetIdx > 0) ? state.patients[targetIdx - 1] : null;
+                        let nextP1 = (targetIdx < state.patients.length - 1) ? state.patients[targetIdx + 1] : null;
+                        if (prevP1 && nextP1 && prevP1.reportingSec && nextP1.reportingSec) {
+                            p.reportingSec = Math.max(p.reportingSec || 0, prevP1.reportingSec + (5 * 60));
+                        } else if (prevP1 && prevP1.reportingSec) {
+                            p.reportingSec = Math.max(p.reportingSec || 0, prevP1.reportingSec + rollingACTSec);
+                        } else {
+                            let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
+                            p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
+                        }
                         
-                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)} ${isColliding1 ? '(+5m Staggered)' : ''}`);
+                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
                         break;
                     }
                     // STRIKE 2 TRIGGER: Missed NEW Position Reporting Deadline + 5m Grace
@@ -1053,13 +1059,19 @@
                         state.patients.splice(i, 1);
                         state.patients.splice(targetIdx, 0, p);
 
-                        // RE-CALCULATE REPORTING TIME AGAIN FOR NEW DEMOTED POSITION (+5m Half-Slot Offset on Collision)!
-                        let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
-                        let baseRepSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
-                        let isColliding2 = state.patients.some((otherP, idx) => idx !== targetIdx && otherP.token !== p.token && otherP.reportingSec === baseRepSec);
-                        p.reportingSec = isColliding2 ? (baseRepSec + (5 * 60)) : baseRepSec;
+                        // CONTEXTUAL REPORTING TIME FOR DEMOTED POSITION (prevP + 5m when inserted between patients)!
+                        let prevP2 = (targetIdx > 0) ? state.patients[targetIdx - 1] : null;
+                        let nextP2 = (targetIdx < state.patients.length - 1) ? state.patients[targetIdx + 1] : null;
+                        if (prevP2 && nextP2 && prevP2.reportingSec && nextP2.reportingSec) {
+                            p.reportingSec = Math.max(p.reportingSec || 0, prevP2.reportingSec + (5 * 60));
+                        } else if (prevP2 && prevP2.reportingSec) {
+                            p.reportingSec = Math.max(p.reportingSec || 0, prevP2.reportingSec + rollingACTSec);
+                        } else {
+                            let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
+                            p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
+                        }
 
-                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)} ${isColliding2 ? '(+5m Staggered)' : ''}`);
+                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
                         break;
                     }
                     // STRIKE 3 TRIGGER: Missed Final Position Reporting Deadline -> Move to Last Slot / Cancel
