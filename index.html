@@ -1242,9 +1242,8 @@
                     liveEtaSec = cumulativeTimeCursor;
                     cumulativeTimeCursor += patientDurationSec;
 
-                    // REPORTING TIME (GUARANTEED AT LEAST 5m BEFORE ESTIMATED TURN TIME!)
-                    let calculatedRepSec = p.reportingSec || (liveEtaSec - leadBufferSec);
-                    let displayReportingSec = Math.min(liveEtaSec - (5 * 60), calculatedRepSec);
+                    // REPORTING TIME (STRICTLY STATIC TICKET TIME - ONLY RE-ASSIGNED ON DEMOTION)
+                    let displayReportingSec = p.reportingSec || (liveEtaSec - leadBufferSec);
                     let displayReportingStr = formatHM(displayReportingSec);
                     let displayEtaStr = formatHM(liveEtaSec);
 
