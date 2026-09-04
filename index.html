@@ -777,15 +777,16 @@
             </div>
 
             <div class="form-group">
-                <label>Patient Admission Type</label>
+                <label>Patient Admission Type <span style="color:var(--accent-rose); font-weight:800;">*Required</span></label>
                 <select class="form-select" id="rec-patient-type">
+                    <option value="" disabled selected>❓ Select Patient Admission Type...</option>
                     <option value="WALKIN">📋 Walk-In (Regular Queue)</option>
                     <option value="EMERGENCY">🚨 Medical Emergency (Instant Pos #1 Priority)</option>
                     <option value="VIP">👑 VIP Reference (Special Priority)</option>
                 </select>
             </div>
 
-            <div class="form-group" id="group-waiting-pref">
+            <div class="form-group" id="group-waiting-pref" style="display: none;">
                 <label>Waiting Preference <span style="color:var(--accent-rose); font-weight:800;">*Required for Walk-Ins</span></label>
                 <select class="form-select" id="rec-waiting-pref">
                     <option value="" disabled selected>❓ Select Waiting Preference (Ask Patient)</option>
@@ -1485,6 +1486,11 @@
                 let prefEl = document.getElementById('rec-waiting-pref');
                 let prefVal = prefEl ? prefEl.value : '';
 
+                if (!pType) {
+                    alert("⚠️ MANDATORY SELECTION REQUIRED!\n\nPlease select the Patient Admission Type (Walk-In, Medical Emergency, or VIP Reference) before registering!");
+                    return;
+                }
+
                 if (pType === 'WALKIN' && !prefVal) {
                     alert("⚠️ MANDATORY SELECTION REQUIRED!\n\nPlease ask the Walk-In patient:\n'Would you like to wait in the lobby right now or go home and return at your reporting time?'\n\nThen select a Waiting Preference before registering!");
                     return;
@@ -1492,7 +1498,10 @@
 
                 registerPatientWithType(pType, dom.inputName.value, prefVal);
                 
-                if (prefEl) prefEl.selectedIndex = 0; // Reset dropdown for next walk-in
+                dom.selectType.selectedIndex = 0; // Reset admission type dropdown to unselected default
+                if (prefEl) prefEl.selectedIndex = 0; // Reset waiting pref dropdown
+                let prefGroup = document.getElementById('group-waiting-pref');
+                if (prefGroup) prefGroup.style.display = 'none'; // Hide waiting pref block until next walk-in selected
             });
 
             dom.btnQuickEmergency.addEventListener('click', () => {
