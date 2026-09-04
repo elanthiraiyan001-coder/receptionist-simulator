@@ -934,13 +934,19 @@
                     }
                 } catch(e) {}
                 let def = getInitialDefaultState();
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(def));
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(def));
+                } catch(e) {}
                 return def;
             }
 
             function saveState() {
                 state.lastUpdated = Date.now();
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+                } catch(e) {
+                    console.warn("localStorage quota/private mode restriction:", e);
+                }
                 renderTable();
             }
 
