@@ -779,7 +779,7 @@
             <div class="form-group">
                 <label>Patient Admission Type <span style="color:var(--accent-rose); font-weight:800;">*Required</span></label>
                 <select class="form-select" id="rec-patient-type">
-                    <option value="" disabled selected>❓ Select Patient Admission Type...</option>
+                    <option value="" selected>-- Select Admission Type --</option>
                     <option value="WALKIN">📋 Walk-In (Regular Queue)</option>
                     <option value="EMERGENCY">🚨 Medical Emergency (Instant Pos #1 Priority)</option>
                     <option value="VIP">👑 VIP Reference (Special Priority)</option>
@@ -789,7 +789,7 @@
             <div class="form-group" id="group-waiting-pref" style="display: none;">
                 <label>Waiting Preference <span style="color:var(--accent-rose); font-weight:800;">*Required for Walk-Ins</span></label>
                 <select class="form-select" id="rec-waiting-pref">
-                    <option value="" disabled selected>❓ Select Waiting Preference (Ask Patient)</option>
+                    <option value="" selected>-- Select Waiting Preference --</option>
                     <option value="LOBBY">🛋️ Wait in Hospital Lobby Right Now</option>
                     <option value="HOLD">🏠 Go Home & Return at Reporting Time (Put on HOLD)</option>
                 </select>
@@ -972,6 +972,14 @@
                 btnSp15x: document.getElementById('btn-rec-sp-15x'),
                 btnReset: document.getElementById('btn-rec-reset')
             };
+
+            // Force Admission Type dropdown to '-- Select Admission Type --' default state on page load
+            if (dom.selectType) {
+                dom.selectType.selectedIndex = 0;
+                dom.selectType.value = "";
+            }
+            let prefGroupInit = document.getElementById('group-waiting-pref');
+            if (prefGroupInit) prefGroupInit.style.display = 'none';
 
             function formatHM(sec) {
                 let h = Math.floor(sec / 3600) % 12 || 12;
