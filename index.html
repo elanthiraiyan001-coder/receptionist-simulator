@@ -1028,7 +1028,7 @@
                         // RE-CALCULATE REPORTING TIME FOR NEW DEMOTED POSITION!
                         // Ensure new Estimated Turn is at least 5m into future from current clock
                         let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
-                        p.reportingSec = newEtaSec - leadBufferSec;
+                        p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
                         
                         console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
                         break;
@@ -1045,7 +1045,7 @@
 
                         // RE-CALCULATE REPORTING TIME AGAIN FOR NEW DEMOTED POSITION!
                         let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
-                        p.reportingSec = newEtaSec - leadBufferSec;
+                        p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
 
                         console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
                         break;
