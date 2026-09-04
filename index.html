@@ -1235,12 +1235,13 @@
                         `;
                     }
                     
-                    // DYNAMIC ESTIMATED TURN COMPUTATION
-                    let liveEtaSec = 0;
+                    // DYNAMIC ESTIMATED TURN COMPUTATION (GUARANTEES MIN 5m BUFFER AFTER REPORTING TIME)
                     let patientDurationSec = (p.type === 'EMERGENCY' || p.type === 'VIP' || p.prio === 'EMERGENCY' || p.prio === 'VIP') ? (1.5 * rollingACTSec) : rollingACTSec;
+                    let minPreTurnBufferSec = 5 * 60;
+                    let minTurnSec = p.reportingSec ? (p.reportingSec + minPreTurnBufferSec) : cumulativeTimeCursor;
 
-                    liveEtaSec = cumulativeTimeCursor;
-                    cumulativeTimeCursor += patientDurationSec;
+                    let liveEtaSec = Math.max(cumulativeTimeCursor, minTurnSec);
+                    cumulativeTimeCursor = liveEtaSec + patientDurationSec;
 
                     // REPORTING TIME (STRICTLY STATIC TICKET TIME - ONLY RE-ASSIGNED ON DEMOTION)
                     let displayReportingSec = p.reportingSec || (liveEtaSec - leadBufferSec);
