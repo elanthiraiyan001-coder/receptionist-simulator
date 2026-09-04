@@ -1034,12 +1034,13 @@
                         state.patients.splice(i, 1);
                         state.patients.splice(targetIdx, 0, p);
 
-                        // RE-CALCULATE REPORTING TIME FOR NEW DEMOTED POSITION!
-                        // Ensure new Estimated Turn is at least 5m into future from current clock
+                        // RE-CALCULATE REPORTING TIME FOR NEW DEMOTED POSITION (+5m Half-Slot Offset on Collision)!
                         let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
-                        p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
+                        let baseRepSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
+                        let isColliding1 = state.patients.some((otherP, idx) => idx !== targetIdx && otherP.token !== p.token && otherP.reportingSec === baseRepSec);
+                        p.reportingSec = isColliding1 ? (baseRepSec + (5 * 60)) : baseRepSec;
                         
-                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
+                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)} ${isColliding1 ? '(+5m Staggered)' : ''}`);
                         break;
                     }
                     // STRIKE 2 TRIGGER: Missed NEW Position Reporting Deadline + 5m Grace
@@ -1052,11 +1053,13 @@
                         state.patients.splice(i, 1);
                         state.patients.splice(targetIdx, 0, p);
 
-                        // RE-CALCULATE REPORTING TIME AGAIN FOR NEW DEMOTED POSITION!
+                        // RE-CALCULATE REPORTING TIME AGAIN FOR NEW DEMOTED POSITION (+5m Half-Slot Offset on Collision)!
                         let newEtaSec = Math.max(currentSimSec + (5 * 60), (9.0 * 3600) + (targetIdx * rollingACTSec));
-                        p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
+                        let baseRepSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
+                        let isColliding2 = state.patients.some((otherP, idx) => idx !== targetIdx && otherP.token !== p.token && otherP.reportingSec === baseRepSec);
+                        p.reportingSec = isColliding2 ? (baseRepSec + (5 * 60)) : baseRepSec;
 
-                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
+                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)} ${isColliding2 ? '(+5m Staggered)' : ''}`);
                         break;
                     }
                     // STRIKE 3 TRIGGER: Missed Final Position Reporting Deadline -> Move to Last Slot / Cancel
