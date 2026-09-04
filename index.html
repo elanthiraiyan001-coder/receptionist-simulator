@@ -1235,9 +1235,9 @@
                         `;
                     }
                     
-                    // DYNAMIC ESTIMATED TURN COMPUTATION (GUARANTEES MIN 5m BUFFER AFTER REPORTING TIME)
+                    // DYNAMIC ESTIMATED TURN COMPUTATION (GUARANTEES PRE-TURN LEAD BUFFER AFTER REPORTING TIME)
                     let patientDurationSec = (p.type === 'EMERGENCY' || p.type === 'VIP' || p.prio === 'EMERGENCY' || p.prio === 'VIP') ? (1.5 * rollingACTSec) : rollingACTSec;
-                    let minPreTurnBufferSec = 5 * 60;
+                    let minPreTurnBufferSec = Math.max(5 * 60, leadBufferSec);
                     let minTurnSec = p.reportingSec ? (p.reportingSec + minPreTurnBufferSec) : cumulativeTimeCursor;
 
                     let liveEtaSec = Math.max(cumulativeTimeCursor, minTurnSec);
