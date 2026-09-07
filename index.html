@@ -1330,7 +1330,7 @@
                     } else if (p.status === 'TEMP_ABSENT') {
                         combinedGateStatusHtml = `<span class="tag-gate-hold">HOLD <button class="btn-action-small restroom-return" onclick="returnFromRestroom('${p.token}')">🏃 Return</button></span>`;
                     } else if (p.status === 'IN_DIAGNOSTICS') {
-                        combinedGateStatusHtml = `<span class="tag-gate-lab">LAB <button class="btn-action-small restroom-return" onclick="returnFromRestroom('${p.token}')">🏃 Return</button></span>`;
+                        combinedGateStatusHtml = `<span class="tag-gate-lab">🔬 LAB <button class="btn-action-small restroom-return" style="background:rgba(6,182,212,0.2); color:var(--accent-cyan); border:1px solid rgba(6,182,212,0.4); font-weight:700;" onclick="returnFromLab('${p.token}')">🔬 Lab Return</button></span>`;
                     } else if (p.status === 'CANCELLED') {
                         combinedGateStatusHtml = `<span style="color:var(--accent-rose); font-weight:800; font-size:11px;">❌ MISSED / CANCELLED</span>`;
                     } else {
@@ -1430,6 +1430,16 @@
                 if (p) {
                     p.status = 'VERIFIED_IN_LOBBY';
                     p.prio = 'RESTROOM_RETURN';
+                    saveState();
+                }
+            };
+
+            window.returnFromLab = function(token) {
+                if (!state) state = loadState();
+                let p = state.patients.find(x => x.token === token);
+                if (p) {
+                    p.status = 'VERIFIED_IN_LOBBY';
+                    p.prio = 'DIAGNOSTIC_RETURN';
                     saveState();
                 }
             };
@@ -1609,11 +1619,31 @@
 
             dom.btnLabReturn.addEventListener('click', () => {
                 state = loadState();
-                let labP = state.patients.find(p => p.status === 'IN_DIAGNOSTICS') || state.patients[0];
-                if (labP) {
+                let labPatients = state.patients.filter(p => p.status === 'IN_DIAGNOSTICS');
+                if (labPatients.length === 0) {
+                    alert("No patients currently in Diagnostic Lab!");
+                    return;
+                }
+                if (labPatients.length === 1) {
+                    let labP = labPatients[0];
                     labP.status = 'VERIFIED_IN_LOBBY';
                     labP.prio = 'DIAGNOSTIC_RETURN';
                     saveState();
+                    alert(`Token ${labP.token} (${labP.name}) returned from Diagnostic Lab and placed in Position #2!`);
+                } else {
+                    let tokenList = labPatients.map(p => `${p.token} (${p.name})`).join('\n');
+                    let chosenToken = prompt(`Multiple patients currently in Diagnostic Lab:\n${tokenList}\n\nEnter the Token of the returning patient (e.g. ${labPatients[0].token}):`);
+                    if (chosenToken) {
+                        let matchedP = labPatients.find(p => p.token.toLowerCase() === chosenToken.trim().toLowerCase());
+                        if (matchedP) {
+                            matchedP.status = 'VERIFIED_IN_LOBBY';
+                            matchedP.prio = 'DIAGNOSTIC_RETURN';
+                            saveState();
+                            alert(`Token ${matchedP.token} (${matchedP.name}) returned from Diagnostic Lab and placed in Position #2!`);
+                        } else {
+                            alert(`Token "${chosenToken}" not found in lab patients list.`);
+                        }
+                    }
                 }
             });
 
