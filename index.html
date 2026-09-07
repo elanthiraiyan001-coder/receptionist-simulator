@@ -1139,6 +1139,7 @@
 
             // DYNAMIC QUEUE CALCULATION ENGINE WITH 20 PRE-LOADED APP BOOKED PATIENTS
             function renderTable() {
+                state = loadState();
                 let currentSimSec = getLiveSimSeconds();
 
                 // Run automated demotion checks!
@@ -1361,13 +1362,8 @@
                         ${!isEmergP ? `<button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>` : ''}
                     `;
 
-                    let quickEmergBtn = (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') 
-                        ? `<button class="btn-action-small" style="background:rgba(244,63,94,0.2); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.4); font-weight:800; margin-right:6px;" onclick="shiftToEmergency('${p.token}')">🚨 Shift Emergency</button>` 
-                        : '';
-
                     let moreOptionsHtml = `
                         <div class="more-options-cell" style="display:inline-flex; align-items:center; justify-content:flex-end;">
-                            ${quickEmergBtn}
                             <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
 
                             <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
@@ -1399,7 +1395,7 @@
                     headerTr.style.borderBottom = '1px solid rgba(6, 182, 212, 0.3)';
                     headerTr.innerHTML = `
                         <td colspan="8" style="padding:12px 16px;">
-                            <div style="display:flex; align-items:center; justify-space-between;">
+                            <div style="display:flex; align-items:center; justify-content:space-between;">
                                 <div style="color:var(--accent-cyan); font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:8px;">
                                     <span style="font-size:16px;">🔬</span> PATIENTS IN DIAGNOSTIC LAB (${labParkedPatients.length} Parked at End of Queue)
                                 </div>
@@ -1417,17 +1413,20 @@
 
                         let isMenuOpen = (openMenuToken === p.token);
                         let isEmergP = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
-                        let quickEmergBtn = (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') 
-                            ? `<button class="btn-action-small" style="background:rgba(244,63,94,0.2); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.4); font-weight:800; margin-right:6px;" onclick="shiftToEmergency('${p.token}')">🚨 Shift Emergency</button>` 
-                            : '';
+                        let menuItemsHtml = '';
+                        if (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') {
+                            menuItemsHtml += `<button class="dots-menu-item danger" style="background:rgba(244,63,94,0.18); color:var(--accent-rose); font-weight:800;" onclick="shiftToEmergency('${p.token}')">🚨 Shift to Emergency</button>`;
+                        }
+                        menuItemsHtml += `
+                            <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
+                            <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
+                        `;
 
                         let moreOptionsHtml = `
                             <div class="more-options-cell" style="display:inline-flex; align-items:center; justify-content:flex-end;">
-                                ${quickEmergBtn}
                                 <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
                                 <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
-                                    <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
-                                    <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
+                                    ${menuItemsHtml}
                                 </div>
                             </div>
                         `;
