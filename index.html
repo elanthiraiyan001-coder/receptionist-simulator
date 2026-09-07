@@ -1249,7 +1249,17 @@
 
                 let visibleQueuePos = 1;
 
+                function getPrioRank(p) {
+                    if (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY') return 1;
+                    if (p.prio === 'VIP_APPROVED') return 2;
+                    if (p.prio === 'DIAGNOSTIC_RETURN') return 3;
+                    if (p.prio === 'RESTROOM_RETURN') return 4;
+                    return 5;
+                }
+
                 let activeQueuePatients = state.patients.filter(p => p.status !== 'IN_CABIN' && p.status !== 'IN_DIAGNOSTICS');
+                activeQueuePatients.sort((a, b) => getPrioRank(a) - getPrioRank(b));
+
                 let labParkedPatients = state.patients.filter(p => p.status === 'IN_DIAGNOSTICS');
 
                 // 1. RENDER ACTIVE QUEUE PATIENTS (1..N)
@@ -1680,12 +1690,12 @@
                     return;
                 }
                 
-                // Smoothly scroll down to the Lab section at the end of the queue table
+                // Act purely as a smooth scroller bringing receptionist down to lab patients at end of queue
                 let labHeaderEl = document.getElementById('lab-parked-section-header') || document.querySelector('.tr-lab-parked');
                 if (labHeaderEl) {
                     labHeaderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     
-                    // Visual pulse highlight on the lab section header to guide the receptionist's eyes
+                    // Visual pulse highlight on the lab section header
                     labHeaderEl.style.transition = 'all 0.3s ease';
                     labHeaderEl.style.outline = '2px solid #06b6d4';
                     labHeaderEl.style.boxShadow = '0 0 25px rgba(6, 182, 212, 0.7)';
@@ -1693,17 +1703,6 @@
                         labHeaderEl.style.outline = 'none';
                         labHeaderEl.style.boxShadow = 'none';
                     }, 2200);
-                }
-
-                if (labPatients.length === 1) {
-                    let labP = labPatients[0];
-                    let confirmRet = confirm(`Patient ${labP.token} (${labP.name}) is in the Diagnostic Lab at the end of the queue.\n\nClick OK to confirm their lab report is ready and bring them back to Position #2!`);
-                    if (confirmRet) {
-                        labP.status = 'VERIFIED_IN_LOBBY';
-                        labP.prio = 'DIAGNOSTIC_RETURN';
-                        saveState();
-                        alert(`Token ${labP.token} (${labP.name}) returned from Diagnostic Lab and placed into Position #2 priority!`);
-                    }
                 }
             });
 
