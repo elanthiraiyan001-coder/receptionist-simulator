@@ -1350,7 +1350,7 @@
                     if (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') {
                         menuItemsHtml += `<button class="dots-menu-item danger" style="background:rgba(244,63,94,0.18); color:var(--accent-rose); font-weight:800;" onclick="shiftToEmergency('${p.token}')">🚨 Shift to Emergency</button>`;
                     }
-                    if (p.status === 'EN_ROUTE' || p.status === 'VERIFIED_IN_LOBBY') {
+                    if (p.status === 'VERIFIED_IN_LOBBY') {
                         menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ Put on HOLD (Go Home)</button>`;
                     }
                     if (!p.isAppTracked) {
