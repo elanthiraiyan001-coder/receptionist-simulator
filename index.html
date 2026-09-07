@@ -898,7 +898,7 @@
     <!-- UNIFIED WALL-CLOCK SHARED ENGINE PRE-LOADED WITH 20 APP BOOKED PATIENTS -->
     <script>
         (function() {
-            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V15';
+            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V16';
 
             function getInitialDefaultState() {
                 let s = 31200; // EXACT START TIME: 08:40:00 AM (31200s)
@@ -1354,8 +1354,13 @@
                         ${!isEmergP ? `<button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>` : ''}
                     `;
 
+                    let quickEmergBtn = (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') 
+                        ? `<button class="btn-action-small" style="background:rgba(244,63,94,0.2); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.4); font-weight:800; margin-right:6px;" onclick="shiftToEmergency('${p.token}')">🚨 Shift Emergency</button>` 
+                        : '';
+
                     let moreOptionsHtml = `
-                        <div class="more-options-cell">
+                        <div class="more-options-cell" style="display:inline-flex; align-items:center; justify-content:flex-end;">
+                            ${quickEmergBtn}
                             <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
 
                             <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
