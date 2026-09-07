@@ -898,7 +898,7 @@
     <!-- UNIFIED WALL-CLOCK SHARED ENGINE PRE-LOADED WITH 20 APP BOOKED PATIENTS -->
     <script>
         (function() {
-            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V14';
+            const STORAGE_KEY = 'VELORA_OPD_SHARED_STATE_V15';
 
             function getInitialDefaultState() {
                 let s = 31200; // EXACT START TIME: 08:40:00 AM (31200s)
@@ -1062,6 +1062,7 @@
                 for (let i = 0; i < state.patients.length; i++) {
                     let p = state.patients[i];
                     if (p.status !== 'EN_ROUTE') continue; // Only demote patients still away / en-route
+                    if (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY') continue; // Exempt emergency patients from demotions
 
                     let deadlineSec = p.reportingSec || (9.0 * 3600 - leadBufferSec);
                     let graceEndSec = deadlineSec + (5 * 60); // 5-minute grace window past reporting deadline
@@ -1321,7 +1322,7 @@
                     } else if (p.status === 'EN_ROUTE') {
                         let isEmerg = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
                         let lateSec = currentSimSec - displayReportingSec;
-                        let lateBadge = (lateSec > 0) ? `<span class="badge-late-warning">⚠️ Late ${Math.floor(lateSec/60)}m</span> ` : '';
+                        let lateBadge = (!isEmerg && lateSec > 0) ? `<span class="badge-late-warning">⚠️ Late ${Math.floor(lateSec/60)}m</span> ` : '';
 
                         combinedGateStatusHtml = `${lateBadge}<button class="btn-admit-primary ${isEmerg ? 'emergency' : ''}" onclick="admitToLobby('${p.token}')">📍 ADMIT</button>`;
                     } else if (p.status === 'VERIFIED_IN_LOBBY') {
@@ -1336,7 +1337,11 @@
                         combinedGateStatusHtml = `<span style="color:var(--text-muted); font-size:11px;">Active (${p.status})</span>`;
                     }
                     let isMenuOpen = (openMenuToken === p.token);
+                    let isEmergP = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
                     let menuItemsHtml = '';
+                    if (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') {
+                        menuItemsHtml += `<button class="dots-menu-item danger" style="background:rgba(244,63,94,0.18); color:var(--accent-rose); font-weight:800;" onclick="shiftToEmergency('${p.token}')">🚨 Shift to Emergency</button>`;
+                    }
                     if (p.status === 'EN_ROUTE' || p.status === 'VERIFIED_IN_LOBBY') {
                         menuItemsHtml += `<button class="dots-menu-item" onclick="stepToRestroom('${p.token}')">⏸️ Put on HOLD (Go Home)</button>`;
                     }
@@ -1346,7 +1351,7 @@
                     menuItemsHtml += `
                         <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
                         <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
-                        <button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>
+                        ${!isEmergP ? `<button class="dots-menu-item danger" onclick="triggerDemotion('${p.token}')">⚠️ Manual Demotion</button>` : ''}
                     `;
 
                     let moreOptionsHtml = `
@@ -1440,8 +1445,32 @@
                 if (!state) state = loadState();
                 let p = state.patients.find(x => x.token === token);
                 if (p) {
+                    if (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY') return; // Emergency patients cannot be demoted
                     p.strike = (p.strike || 0) + 1;
                     saveState();
+                }
+            };
+
+            window.shiftToEmergency = function(token) {
+                if (!state) state = loadState();
+                let idx = state.patients.findIndex(x => x.token === token);
+                if (idx !== -1) {
+                    let p = state.patients[idx];
+                    p.prio = 'EMERGENCY';
+                    p.type = 'EMERGENCY';
+                    p.strike = 0; // Clear all demotion strikes
+
+                    // Splice out from current position
+                    state.patients.splice(idx, 1);
+
+                    // Count active emergency cases already at top of queue
+                    let emergCount = state.patients.filter(x => (x.prio === 'EMERGENCY' || x.type === 'EMERGENCY') && x.status !== 'IN_CABIN').length;
+
+                    // Insert at top of queue right after active emergency cases (Position #1 or #2)
+                    state.patients.splice(emergCount, 0, p);
+
+                    saveState();
+                    alert(`🚨 Token ${p.token} (${p.name}) shifted to EMERGENCY status!\nPatient moved to Position #${emergCount + 1} at top of queue.`);
                 }
             };
 
