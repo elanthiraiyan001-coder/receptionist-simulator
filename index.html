@@ -1249,9 +1249,11 @@
 
                 let visibleQueuePos = 1;
 
-                state.patients.forEach((p) => {
-                    if (p.status === 'IN_CABIN') return; // Exclude active patient inside cabin from queue table below
+                let activeQueuePatients = state.patients.filter(p => p.status !== 'IN_CABIN' && p.status !== 'IN_DIAGNOSTICS');
+                let labParkedPatients = state.patients.filter(p => p.status === 'IN_DIAGNOSTICS');
 
+                // 1. RENDER ACTIVE QUEUE PATIENTS (1..N)
+                activeQueuePatients.forEach((p) => {
                     let tr = document.createElement('tr');
                     
                     if (p.status === 'CANCELLED' || p.strike === 3) {
@@ -1277,7 +1279,7 @@
                         typeBadgeHtml = `<span class="badge-type-app">📱 App</span>`;
                     }
 
-                    // Cumulative Tiny Strike Dots HTML (Clean Minimalist Dots Only)
+                    // Cumulative Tiny Strike Dots HTML
                     let strikeBadgeHtml = '';
                     if (p.strike === 1) {
                         strikeBadgeHtml = `
@@ -1302,20 +1304,17 @@
                         `;
                     }
                     
-                    // DYNAMIC ESTIMATED TURN COMPUTATION (GUARANTEES EXACTLY 5m PRE-TURN BUFFER AFTER REPORTING TIME)
                     let patientDurationSec = (p.type === 'EMERGENCY' || p.type === 'VIP' || p.prio === 'EMERGENCY' || p.prio === 'VIP') ? (1.5 * rollingACTSec) : rollingACTSec;
-                    let minPreTurnBufferSec = 5 * 60; // Strictly 5 minutes check-in buffer
+                    let minPreTurnBufferSec = 5 * 60;
                     let minTurnSec = p.reportingSec ? (p.reportingSec + minPreTurnBufferSec) : cumulativeTimeCursor;
 
                     let liveEtaSec = Math.max(cumulativeTimeCursor, minTurnSec);
                     cumulativeTimeCursor = liveEtaSec + patientDurationSec;
 
-                    // REPORTING TIME (STRICTLY STATIC TICKET TIME - ONLY RE-ASSIGNED ON DEMOTION)
                     let displayReportingSec = p.reportingSec || (liveEtaSec - leadBufferSec);
                     let displayReportingStr = formatHM(displayReportingSec);
                     let displayEtaStr = formatHM(liveEtaSec);
 
-                    // COMBINED GATE STATUS COLUMN WITH LATE WARNING (SYNCHRONIZED WITH DISPLAYED REPORTING TIME!)
                     let combinedGateStatusHtml = '';
                     if (p.status === 'PENDING_VIP_APPROVAL') {
                         combinedGateStatusHtml = `<span class="tag-gate-hold" style="background:rgba(245,158,11,0.2); color:var(--accent-amber); border-color:rgba(245,158,11,0.4);">⏳ PENDING DOCTOR APPROVAL</span>`;
@@ -1329,8 +1328,6 @@
                         combinedGateStatusHtml = `<span class="tag-gate-lobby">✓ LOBBY</span>`;
                     } else if (p.status === 'TEMP_ABSENT') {
                         combinedGateStatusHtml = `<span class="tag-gate-hold">HOLD <button class="btn-action-small restroom-return" onclick="returnFromRestroom('${p.token}')">🏃 Return</button></span>`;
-                    } else if (p.status === 'IN_DIAGNOSTICS') {
-                        combinedGateStatusHtml = `<span class="tag-gate-lab">🔬 LAB <button class="btn-action-small restroom-return" style="background:rgba(6,182,212,0.2); color:var(--accent-cyan); border:1px solid rgba(6,182,212,0.4); font-weight:700;" onclick="returnFromLab('${p.token}')">🔬 Lab Return</button></span>`;
                     } else if (p.status === 'CANCELLED') {
                         combinedGateStatusHtml = `<span style="color:var(--accent-rose); font-weight:800; font-size:11px;">❌ MISSED / CANCELLED</span>`;
                     } else {
@@ -1382,6 +1379,64 @@
                     dom.tbody.appendChild(tr);
                     visibleQueuePos++;
                 });
+
+                // 2. RENDER PARKED DIAGNOSTIC LAB PATIENTS SECTION AT THE END OF THE QUEUE
+                if (labParkedPatients.length > 0) {
+                    let headerTr = document.createElement('tr');
+                    headerTr.id = 'lab-parked-section-header';
+                    headerTr.style.background = 'rgba(6, 182, 212, 0.12)';
+                    headerTr.style.borderTop = '2px dashed rgba(6, 182, 212, 0.5)';
+                    headerTr.style.borderBottom = '1px solid rgba(6, 182, 212, 0.3)';
+                    headerTr.innerHTML = `
+                        <td colspan="8" style="padding:12px 16px;">
+                            <div style="display:flex; align-items:center; justify-space-between;">
+                                <div style="color:var(--accent-cyan); font-weight:800; font-size:13px; text-transform:uppercase; letter-spacing:0.5px; display:flex; align-items:center; gap:8px;">
+                                    <span style="font-size:16px;">🔬</span> PATIENTS IN DIAGNOSTIC LAB (${labParkedPatients.length} Parked at End of Queue)
+                                </div>
+                                <span style="font-size:11px; color:var(--text-muted);">Dummy / Holding Location until Lab Reports Ready</span>
+                            </div>
+                        </td>
+                    `;
+                    dom.tbody.appendChild(headerTr);
+
+                    labParkedPatients.forEach((p) => {
+                        let tr = document.createElement('tr');
+                        tr.id = `lab-row-${p.token}`;
+                        tr.className = 'tr-lab-parked';
+                        tr.style.background = 'rgba(6, 182, 212, 0.04)';
+
+                        let isMenuOpen = (openMenuToken === p.token);
+                        let isEmergP = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
+                        let quickEmergBtn = (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') 
+                            ? `<button class="btn-action-small" style="background:rgba(244,63,94,0.2); color:var(--accent-rose); border:1px solid rgba(244,63,94,0.4); font-weight:800; margin-right:6px;" onclick="shiftToEmergency('${p.token}')">🚨 Shift Emergency</button>` 
+                            : '';
+
+                        let moreOptionsHtml = `
+                            <div class="more-options-cell" style="display:inline-flex; align-items:center; justify-content:flex-end;">
+                                ${quickEmergBtn}
+                                <button class="btn-three-dots" onclick="toggleMenu(event, '${p.token}')">⋮</button>
+                                <div class="dots-dropdown-menu ${isMenuOpen ? '' : 'hidden'}">
+                                    <button class="dots-menu-item" onclick="printSlip('${p.token}')">🖨️ Print Ticket Slip</button>
+                                    <button class="dots-menu-item" onclick="sendWhatsAppQR('${p.token}')">💬 WhatsApp QR</button>
+                                </div>
+                            </div>
+                        `;
+
+                        tr.innerHTML = `
+                            <td><span style="background:rgba(6,182,212,0.18); color:var(--accent-cyan); padding:4px 8px; border-radius:6px; font-weight:800; font-size:11px; border:1px solid rgba(6,182,212,0.3);">🔬 IN LAB</span></td>
+                            <td class="token-cell">${p.token}</td>
+                            <td class="patient-cell">${p.name}</td>
+                            <td><span class="badge-type-walkin" style="background:rgba(6,182,212,0.15); color:var(--accent-cyan);">🔬 Lab Ref</span></td>
+                            <td><strong style="color:var(--accent-cyan);">Sent to Lab</strong></td>
+                            <td><span style="color:var(--text-muted); font-size:12px;">Awaiting Report</span></td>
+                            <td>
+                                <button class="btn-action-small" style="background:rgba(6,182,212,0.25); color:#06b6d4; border:1px solid rgba(6,182,212,0.5); font-weight:800; padding:6px 12px; border-radius:6px; cursor:pointer;" onclick="returnFromLab('${p.token}')">🏃 Return from Lab (Pos #2)</button>
+                            </td>
+                            <td style="text-align:right;">${moreOptionsHtml}</td>
+                        `;
+                        dom.tbody.appendChild(tr);
+                    });
+                }
             }
 
             window.toggleMenu = function(e, token) {
@@ -1624,25 +1679,30 @@
                     alert("No patients currently in Diagnostic Lab!");
                     return;
                 }
+                
+                // Smoothly scroll down to the Lab section at the end of the queue table
+                let labHeaderEl = document.getElementById('lab-parked-section-header') || document.querySelector('.tr-lab-parked');
+                if (labHeaderEl) {
+                    labHeaderEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Visual pulse highlight on the lab section header to guide the receptionist's eyes
+                    labHeaderEl.style.transition = 'all 0.3s ease';
+                    labHeaderEl.style.outline = '2px solid #06b6d4';
+                    labHeaderEl.style.boxShadow = '0 0 25px rgba(6, 182, 212, 0.7)';
+                    setTimeout(() => {
+                        labHeaderEl.style.outline = 'none';
+                        labHeaderEl.style.boxShadow = 'none';
+                    }, 2200);
+                }
+
                 if (labPatients.length === 1) {
                     let labP = labPatients[0];
-                    labP.status = 'VERIFIED_IN_LOBBY';
-                    labP.prio = 'DIAGNOSTIC_RETURN';
-                    saveState();
-                    alert(`Token ${labP.token} (${labP.name}) returned from Diagnostic Lab and placed in Position #2!`);
-                } else {
-                    let tokenList = labPatients.map(p => `${p.token} (${p.name})`).join('\n');
-                    let chosenToken = prompt(`Multiple patients currently in Diagnostic Lab:\n${tokenList}\n\nEnter the Token of the returning patient (e.g. ${labPatients[0].token}):`);
-                    if (chosenToken) {
-                        let matchedP = labPatients.find(p => p.token.toLowerCase() === chosenToken.trim().toLowerCase());
-                        if (matchedP) {
-                            matchedP.status = 'VERIFIED_IN_LOBBY';
-                            matchedP.prio = 'DIAGNOSTIC_RETURN';
-                            saveState();
-                            alert(`Token ${matchedP.token} (${matchedP.name}) returned from Diagnostic Lab and placed in Position #2!`);
-                        } else {
-                            alert(`Token "${chosenToken}" not found in lab patients list.`);
-                        }
+                    let confirmRet = confirm(`Patient ${labP.token} (${labP.name}) is in the Diagnostic Lab at the end of the queue.\n\nClick OK to confirm their lab report is ready and bring them back to Position #2!`);
+                    if (confirmRet) {
+                        labP.status = 'VERIFIED_IN_LOBBY';
+                        labP.prio = 'DIAGNOSTIC_RETURN';
+                        saveState();
+                        alert(`Token ${labP.token} (${labP.name}) returned from Diagnostic Lab and placed into Position #2 priority!`);
                     }
                 }
             });
