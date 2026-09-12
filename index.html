@@ -1077,10 +1077,13 @@
                         state.patients.splice(i, 1);
                         state.patients.splice(targetIdx, 0, p);
 
-                        // CONTEXTUAL REPORTING TIME FOR DEMOTED POSITION (prevP + 5m when inserted between patients)!
+                        // CONTEXTUAL REPORTING TIME FOR DEMOTED POSITION
                         let prevP1 = (targetIdx > 0) ? state.patients[targetIdx - 1] : null;
                         let nextP1 = (targetIdx < state.patients.length - 1) ? state.patients[targetIdx + 1] : null;
-                        if (prevP1 && nextP1 && prevP1.reportingSec && nextP1.reportingSec) {
+                        if (targetIdx === i || !prevP1) {
+                            // SINGLE PATIENT EDGE-CASE: 0 patients behind -> push reporting time by +20 minutes!
+                            p.reportingSec = Math.max(p.reportingSec || 0, currentSimSec + (20 * 60));
+                        } else if (prevP1 && nextP1 && prevP1.reportingSec && nextP1.reportingSec) {
                             p.reportingSec = Math.max(p.reportingSec || 0, prevP1.reportingSec + (5 * 60));
                         } else if (prevP1 && prevP1.reportingSec) {
                             p.reportingSec = Math.max(p.reportingSec || 0, prevP1.reportingSec + rollingACTSec);
@@ -1089,7 +1092,7 @@
                             p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
                         }
                         
-                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted +2 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
+                        console.log(`⚠️ STRIKE 1: Token ${p.token} demoted. New Reporting Time: ${formatHM(p.reportingSec)}`);
                         break;
                     }
                     // STRIKE 2 TRIGGER: Missed NEW Position Reporting Deadline + 5m Grace
@@ -1102,10 +1105,13 @@
                         state.patients.splice(i, 1);
                         state.patients.splice(targetIdx, 0, p);
 
-                        // CONTEXTUAL REPORTING TIME FOR DEMOTED POSITION (prevP + 5m when inserted between patients)!
+                        // CONTEXTUAL REPORTING TIME FOR DEMOTED POSITION
                         let prevP2 = (targetIdx > 0) ? state.patients[targetIdx - 1] : null;
                         let nextP2 = (targetIdx < state.patients.length - 1) ? state.patients[targetIdx + 1] : null;
-                        if (prevP2 && nextP2 && prevP2.reportingSec && nextP2.reportingSec) {
+                        if (targetIdx === i || !prevP2) {
+                            // SINGLE PATIENT EDGE-CASE: 0 patients behind -> push reporting time by +20 minutes!
+                            p.reportingSec = Math.max(p.reportingSec || 0, currentSimSec + (20 * 60));
+                        } else if (prevP2 && nextP2 && prevP2.reportingSec && nextP2.reportingSec) {
                             p.reportingSec = Math.max(p.reportingSec || 0, prevP2.reportingSec + (5 * 60));
                         } else if (prevP2 && prevP2.reportingSec) {
                             p.reportingSec = Math.max(p.reportingSec || 0, prevP2.reportingSec + rollingACTSec);
@@ -1114,7 +1120,7 @@
                             p.reportingSec = Math.max(p.reportingSec || 0, newEtaSec - leadBufferSec);
                         }
 
-                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted +5 slots. New Reporting Time: ${formatHM(p.reportingSec)}`);
+                        console.log(`🛑 STRIKE 2: Token ${p.token} demoted. New Reporting Time: ${formatHM(p.reportingSec)}`);
                         break;
                     }
                     // STRIKE 3 TRIGGER: Missed Final Position Reporting Deadline -> Move to Last Slot / Cancel
