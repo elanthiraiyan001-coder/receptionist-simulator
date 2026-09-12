@@ -1334,7 +1334,7 @@
                         let lateSec = currentSimSec - displayReportingSec;
                         let lateBadge = (!isEmerg && lateSec > 0) ? `<span class="badge-late-warning">⚠️ Late ${Math.floor(lateSec/60)}m</span> ` : '';
 
-                        combinedGateStatusHtml = `${lateBadge}<button class="btn-admit-primary ${isEmerg ? 'emergency' : ''}" onclick="admitToLobby('${p.token}')">📍 ADMIT</button>`;
+                        combinedGateStatusHtml = `${lateBadge}<button class="btn-admit-primary ${isEmerg ? 'emergency' : ''}" onclick="admitToLobby('${p.token}')">${isEmerg ? '🚨 ADMIT EMERGENCY' : '📍 ADMIT'}</button>`;
                     } else if (p.status === 'VERIFIED_IN_LOBBY') {
                         combinedGateStatusHtml = `<span class="tag-gate-lobby">✓ LOBBY</span>`;
                     } else if (p.status === 'TEMP_ABSENT') {
@@ -1592,7 +1592,8 @@
                     state.patients.splice(emergCount, 0, p);
 
                     saveState();
-                    alert(`🚨 Token ${p.token} (${p.name}) shifted to EMERGENCY status!\nPatient moved to Position #${emergCount + 1} at top of queue.`);
+                    let isEnRoute = (p.status === 'EN_ROUTE');
+                    alert(`🚨 Token ${p.token} (${p.name}) shifted to EMERGENCY status!\n${isEnRoute ? 'Patient is currently EN-ROUTE. Click "🚨 ADMIT EMERGENCY" when they enter the hospital building.' : 'Patient is verified in lobby at Position #1 priority.'}`);
                 }
             };
 
