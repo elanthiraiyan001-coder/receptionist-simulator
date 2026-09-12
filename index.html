@@ -1346,7 +1346,12 @@
                     }
                     let isMenuOpen = (openMenuToken === p.token);
                     let isEmergP = (p.prio === 'EMERGENCY' || p.type === 'EMERGENCY');
+                    let isVipAppP = (p.prio === 'VIP_APPROVED');
                     let menuItemsHtml = '';
+                    
+                    if (isEmergP || isVipAppP) {
+                        menuItemsHtml += `<button class="dots-menu-item" style="background:rgba(6,182,212,0.18); color:var(--accent-cyan); font-weight:800;" onclick="movePriorityAhead('${p.token}')">⬆️ Move Ahead in Line (Severity Override)</button>`;
+                    }
                     if (!isEmergP && p.status !== 'CANCELLED' && p.status !== 'IN_CABIN') {
                         menuItemsHtml += `<button class="dots-menu-item danger" style="background:rgba(244,63,94,0.18); color:var(--accent-rose); font-weight:800;" onclick="shiftToEmergency('${p.token}')">🚨 Shift to Emergency</button>`;
                     }
@@ -1477,6 +1482,34 @@
 
             window.sendWhatsAppQR = function(token) {
                 alert(`💬 WhatsApp Live Queue Tracker QR sent for Token ${token}!`);
+            };
+
+            window.movePriorityAhead = function(token) {
+                if (!state) state = loadState();
+                let idx = state.patients.findIndex(p => p.token === token);
+                if (idx > 0) {
+                    let targetP = state.patients[idx];
+                    let targetPrioGroup = (targetP.prio === 'EMERGENCY' || targetP.type === 'EMERGENCY') ? 'EMERGENCY' : targetP.prio;
+                    
+                    let prevIdx = -1;
+                    for (let i = idx - 1; i >= 0; i--) {
+                        let pGroup = (state.patients[i].prio === 'EMERGENCY' || state.patients[i].type === 'EMERGENCY') ? 'EMERGENCY' : state.patients[i].prio;
+                        if (pGroup === targetPrioGroup) {
+                            prevIdx = i;
+                            break;
+                        }
+                    }
+                    
+                    if (prevIdx !== -1) {
+                        let temp = state.patients[prevIdx];
+                        state.patients[prevIdx] = targetP;
+                        state.patients[idx] = temp;
+                        saveState();
+                        alert(`⚡ Severity Override: Token ${targetP.token} (${targetP.name}) moved ahead of Token ${temp.token} (${temp.name}) in the priority line!`);
+                    } else {
+                        alert(`Token ${targetP.token} is already at the very front of its priority tier!`);
+                    }
+                }
             };
 
             window.stepToRestroom = function(token) {
